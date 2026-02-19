@@ -71,16 +71,15 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
 
   const handleKeyDown = useCallback(
     (key: string) => {
-      if (!isStarted) return;
-
+      if (!isStarted || isPaused) return;
       if (mode === 'timed' && timeLeft === 0) return;
 
-      if (isPaused) return;
+      const currentWord = words[activeWordIndex];
+      const currentTyped = userInput[activeWordIndex];
+
+      if (!currentWord || currentTyped === undefined) return;
 
       if (!startTime) setStartTime(Date.now());
-
-      const currentTyped = userInput[activeWordIndex];
-      const currentWord = words[activeWordIndex];
 
       if (key.length === 1 && key !== ' ') {
         const isCorrect = key === currentWord[currentTyped.length];
@@ -157,6 +156,7 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     (newText: string) => {
       setIsStarted(false);
       setActiveWordIndex(0);
+      setIsPaused(false);
       setUserInput(newText.split(' ').map(() => ''));
       setStartTime(null);
       setTotalChars(0);

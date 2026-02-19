@@ -97,7 +97,8 @@ const SETTINGS_CONFIG: {
 };
 
 export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
-  const { mode, setMode } = useConfig();
+  const { mode, setMode, category, setCategory, difficulty, setDifficulty } =
+    useConfig();
 
   const { soundName, setSoundName } = useSound();
 
@@ -110,6 +111,27 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
           options: [
             { label: 'Timed (60s)', value: 'timed' },
             { label: 'Passage', value: 'passage' },
+          ],
+        };
+      case 'Category':
+        return {
+          currentValue: category,
+          onChange: (val: any) => setCategory(val),
+          options: [
+            { label: 'General', value: 'general' },
+            { label: 'Code', value: 'code' },
+            { label: 'Quotes', value: 'quotes' },
+            { label: 'Lyrics', value: 'lyrics' },
+          ],
+        };
+      case 'Difficulty':
+        return {
+          currentValue: difficulty,
+          onChange: (val: any) => setDifficulty(val),
+          options: [
+            { label: 'Easy', value: 'easy' },
+            { label: 'Medium', value: 'medium' },
+            { label: 'Hard', value: 'hard' },
           ],
         };
       case 'Sound':

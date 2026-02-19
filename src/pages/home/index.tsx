@@ -16,15 +16,28 @@ import { WordDisplay } from '@/components/WordDisplay';
 import { TagsContainer } from '@/components/TagsContainer';
 import { PauseWarning } from '@/components/PauseWarning';
 import { MetricsPanel } from '@/components/MetricsPanel';
+import useRequest from '@/hooks/useRequest';
+import { useConfig } from '@/contexts/ConfigContext';
 
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
 
+  const { category, difficulty } = useConfig();
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const [currentText, setCurrentText] = useState(texts[0]);
+  const [currentText, setCurrentText] = useState('');
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data } = useRequest<{ content: string }>({
+    url: '/texts/random',
+    method: 'GET',
+    params: {
+      category,
+      difficulty,
+    },
+  });
 
   const wordsRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -79,6 +92,18 @@ export default function Home() {
     }
   }, [isSettingsOpen, isStarted]);
 
+  useEffect(() => {
+    if (data) {
+      setCurrentText(data?.content);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (data?.content) {
+      reset(data.content);
+    }
+  }, [data, reset]);
+
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
       <Header onOpenSettings={() => setIsSettingsOpen(true)} />
@@ -120,7 +145,7 @@ export default function Home() {
           onKeyDown={(e) => handleKeyDown(e.key)}
         />
 
-        {isPaused && (
+        {isStarted && isPaused && (
           <PauseWarning
             onResume={() => {
               resume();
