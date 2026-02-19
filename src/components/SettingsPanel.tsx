@@ -5,6 +5,94 @@ type SettingsPanelProps = {
   setIsOpen: (value: boolean) => void;
 };
 
+type RadioOption = {
+  label: string;
+  selected?: boolean;
+};
+
+type DropdownOption = {
+  label: string;
+  value: string;
+  selected?: boolean;
+};
+
+type SettingConfig =
+  | {
+      label: string;
+      type: 'radio';
+      options: RadioOption[];
+      wrap?: boolean;
+    }
+  | {
+      label: string;
+      type: 'dropdown';
+      options: DropdownOption[];
+    };
+
+const SETTINGS_CONFIG: {
+  left: SettingConfig[];
+  right: SettingConfig[];
+} = {
+  left: [
+    {
+      label: 'Mode',
+      type: 'radio',
+      options: [{ label: 'Timed (60s)', selected: true }, { label: 'Passage' }],
+    },
+    {
+      label: 'Difficulty',
+      type: 'radio',
+      options: [
+        { label: 'Easy' },
+        { label: 'Medium' },
+        { label: 'Hard', selected: true },
+      ],
+    },
+    {
+      label: 'Category',
+      type: 'radio',
+      wrap: true,
+      options: [
+        { label: 'General', selected: true },
+        { label: 'Lyrics' },
+        { label: 'Quotes' },
+        { label: 'Code' },
+      ],
+    },
+  ],
+  right: [
+    {
+      label: 'Sound',
+      type: 'dropdown',
+      options: [
+        { label: 'Creamy', value: 'creamy', selected: true },
+        { label: 'Beep', value: 'beep' },
+        { label: 'Osu', value: 'osu' },
+        { label: 'Pop', value: 'pop' },
+        { label: 'Punch', value: 'punch' },
+        { label: 'Rubber Keys', value: 'rubber' },
+        { label: 'Typewriter', value: 'typewriter' },
+        { label: 'Click', value: 'click' },
+        { label: 'Hitmarker', value: 'hitmarker' },
+      ],
+    },
+    {
+      label: 'Caret',
+      type: 'radio',
+      options: [
+        { label: 'Pip', selected: true },
+        { label: 'Box' },
+        { label: 'Underline' },
+      ],
+    },
+    {
+      label: 'Theme',
+      type: 'radio',
+      options: [{ label: 'Dark', selected: true }, { label: 'Light' }],
+    },
+  ],
+};
+
 export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
   return (
     <div
@@ -13,6 +101,7 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
         shadow-2xl
         p-8 xl:px-28
         animate-slideUp
+        bg-background
       "
       onClick={(e) => e.stopPropagation()}
     >
@@ -29,54 +118,25 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
 
         <div className="flex flex-col lg:grid lg:grid-cols-2 lg:divide-x lg:divide-neutral-700">
           <div className="flex flex-col gap-6 pr-0 lg:pr-8">
-            <SettingsRow
-              label="Mode"
-              options={[
-                { label: 'Timed (60s)', selected: true },
-                { label: 'Passage' },
-              ]}
-            />
-
-            <SettingsRow
-              label="Difficulty"
-              options={[
-                { label: 'Easy' },
-                { label: 'Medium' },
-                { label: 'Hard', selected: true },
-              ]}
-            />
-
-            <SettingsRow
-              label="Category"
-              wrap
-              options={[
-                { label: 'General', selected: true },
-                { label: 'Lyrics' },
-                { label: 'Quotes' },
-                { label: 'Code' },
-              ]}
-            />
+            {SETTINGS_CONFIG.left.map((setting) => (
+              <SettingsRow
+                key={setting.label}
+                label={setting.label}
+                type={setting.type}
+                options={setting.options}
+              />
+            ))}
           </div>
 
           <div className="flex flex-col gap-6 pl-0 lg:pl-8">
-            <SettingsRow
-              label="Sound"
-              options={[{ label: 'Punch', selected: true }, { label: 'Play' }]}
-            />
-
-            <SettingsRow
-              label="Caret"
-              options={[
-                { label: 'Pip', selected: true },
-                { label: 'Box' },
-                { label: 'Underline' },
-              ]}
-            />
-
-            <SettingsRow
-              label="Theme"
-              options={[{ label: 'Dark', selected: true }, { label: 'Light' }]}
-            />
+            {SETTINGS_CONFIG.right.map((setting) => (
+              <SettingsRow
+                key={setting.label}
+                label={setting.label}
+                type={setting.type}
+                options={setting.options}
+              />
+            ))}
           </div>
         </div>
 

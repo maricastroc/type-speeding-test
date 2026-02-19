@@ -11,8 +11,11 @@ import {
   faArrowRotateRight,
   faArrowsRotate,
 } from '@fortawesome/free-solid-svg-icons';
+import { useSound } from '@/contexts/SoundContext';
 
 export default function Home() {
+  const { playKeystroke, playErrorSound } = useSound();
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [currentText, setCurrentText] = useState(texts[0]);
@@ -29,7 +32,12 @@ export default function Home() {
     start,
     handleKeyDown,
     reset,
-  } = useTypingEngine(currentText);
+  } = useTypingEngine(currentText, {
+    onError: () => {
+      playErrorSound();
+    },
+    onSuccess: () => playKeystroke(),
+  });
 
   const handleStart = () => {
     start();
@@ -42,7 +50,6 @@ export default function Home() {
     reset(newText);
   };
 
-  // SCROLL ATUALIZADO (Nível Pleno: foca na palavra ativa)
   useEffect(() => {
     if (!isStarted) return;
     const currentWordEl = wordsRef.current[activeWordIndex];
@@ -154,7 +161,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Footer / Controls */}
       <div className="flex items-center justify-center gap-12 mt-20">
         <FontAwesomeIcon
           onClick={onRegenerate}

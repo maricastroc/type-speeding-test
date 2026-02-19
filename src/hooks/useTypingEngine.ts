@@ -1,6 +1,11 @@
 import { useState, useCallback, useMemo } from 'react';
 
-export const useTypingEngine = (text: string) => {
+interface TypingOptions {
+  onError?: () => void;
+  onSuccess?: () => void;
+}
+
+export const useTypingEngine = (text: string, options?: TypingOptions) => {
   const [activeWordIndex, setActiveWordIndex] = useState(0);
 
   const [userInput, setUserInput] = useState<string[]>(() =>
@@ -17,6 +22,23 @@ export const useTypingEngine = (text: string) => {
       if (!isStarted) return;
 
       const currentTyped = userInput[activeWordIndex];
+
+      const currentWord = words[activeWordIndex];
+
+      if (key.length === 1 && key !== ' ') {
+        const isCorrect = key === currentWord[currentTyped.length];
+
+        if (isCorrect) {
+          options?.onSuccess?.();
+        } else {
+          options?.onError?.();
+        }
+
+        const newUserInput = [...userInput];
+        newUserInput[activeWordIndex] = currentTyped + key;
+        setUserInput(newUserInput);
+        return;
+      }
 
       if (key === ' ') {
         if (currentTyped.length > 0 && activeWordIndex < words.length - 1) {
