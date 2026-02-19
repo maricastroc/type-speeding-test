@@ -1,3 +1,4 @@
+import { useConfig } from '@/contexts/ConfigContext';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 
 interface TypingOptions {
@@ -8,6 +9,8 @@ interface TypingOptions {
 }
 
 export const useTypingEngine = (text: string, options?: TypingOptions) => {
+  const { mode } = useConfig();
+
   const [activeWordIndex, setActiveWordIndex] = useState(0);
 
   const [userInput, setUserInput] = useState<string[]>(() =>
@@ -24,13 +27,16 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
 
   const [errors, setErrors] = useState(0);
 
-  const [timeLeft, setTimeLeft] = useState(options?.initialTime || 60);
+  const [timeLeft, setTimeLeft] = useState(() =>
+    mode === 'timed' ? options?.initialTime || 60 : 0
+  );
 
   const words = useMemo(() => text.split(' '), [text]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isStarted && !isPaused && timeLeft > 0) {
+
+    if (isStarted && !isPaused && mode === 'timed' && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -128,10 +134,18 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
       setStartTime(null);
       setTotalChars(0);
       setErrors(0);
-      setTimeLeft(options?.initialTime || 60);
+      setTimeLeft(mode === 'timed' ? options?.initialTime || 60 : 0);
     },
-    [options?.initialTime]
+    [options?.initialTime, mode]
   );
+
+  useEffect(() => {
+    if (mode === 'passage') {
+      setTimeLeft(0);
+    } else {
+      setTimeLeft(options?.initialTime || 60);
+    }
+  }, [mode, options?.initialTime]);
 
   return {
     isStarted,
@@ -139,7 +153,9 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     activeWordIndex,
     userInput,
     words,
+    mode,
     start: () => setIsStarted(true),
+    setIsPaused,
     handleKeyDown,
     reset,
     resume,

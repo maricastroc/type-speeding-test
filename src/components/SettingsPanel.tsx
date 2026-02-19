@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useConfig } from '@/contexts/ConfigContext';
 import { CloseButton } from './CloseButton';
 import { SettingsRow } from './SettingsRow';
+import { useSound } from '@/contexts/SoundContext';
 
 type SettingsPanelProps = {
   setIsOpen: (value: boolean) => void;
@@ -94,6 +97,33 @@ const SETTINGS_CONFIG: {
 };
 
 export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
+  const { mode, setMode } = useConfig();
+
+  const { soundName, setSoundName } = useSound();
+
+  const getPropsForLabel = (label: string) => {
+    switch (label) {
+      case 'Mode':
+        return {
+          currentValue: mode,
+          onChange: (val: any) => setMode(val),
+          options: [
+            { label: 'Timed (60s)', value: 'timed' },
+            { label: 'Passage', value: 'passage' },
+          ],
+        };
+      case 'Sound':
+        return {
+          currentValue: soundName,
+          onChange: (val: any) => setSoundName(val),
+          options: SETTINGS_CONFIG.right.find((s) => s.label === 'Sound')
+            ?.options as any,
+        };
+      default:
+        return { currentValue: '', onChange: () => {}, options: [] };
+    }
+  };
+
   return (
     <div
       className="
@@ -118,25 +148,43 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
 
         <div className="flex flex-col lg:grid lg:grid-cols-2 lg:divide-x lg:divide-neutral-700">
           <div className="flex flex-col gap-6 pr-0 lg:pr-8">
-            {SETTINGS_CONFIG.left.map((setting) => (
-              <SettingsRow
-                key={setting.label}
-                label={setting.label}
-                type={setting.type}
-                options={setting.options}
-              />
-            ))}
+            {SETTINGS_CONFIG.left.map((setting) => {
+              const dynamicProps = getPropsForLabel(setting.label);
+              return (
+                <SettingsRow
+                  key={setting.label}
+                  label={setting.label}
+                  type={setting.type as any}
+                  options={
+                    dynamicProps.options.length > 0
+                      ? dynamicProps.options
+                      : (setting.options as any)
+                  }
+                  currentValue={dynamicProps.currentValue}
+                  onChange={dynamicProps.onChange}
+                />
+              );
+            })}
           </div>
 
           <div className="flex flex-col gap-6 pl-0 lg:pl-8">
-            {SETTINGS_CONFIG.right.map((setting) => (
-              <SettingsRow
-                key={setting.label}
-                label={setting.label}
-                type={setting.type}
-                options={setting.options}
-              />
-            ))}
+            {SETTINGS_CONFIG.right.map((setting) => {
+              const dynamicProps = getPropsForLabel(setting.label);
+              return (
+                <SettingsRow
+                  key={setting.label}
+                  label={setting.label}
+                  type={setting.type as any}
+                  options={
+                    dynamicProps.options.length > 0
+                      ? dynamicProps.options
+                      : (setting.options as any)
+                  }
+                  currentValue={dynamicProps.currentValue}
+                  onChange={dynamicProps.onChange}
+                />
+              );
+            })}
           </div>
         </div>
 

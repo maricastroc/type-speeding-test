@@ -1,3 +1,4 @@
+import { ConfigProvider } from '@/contexts/ConfigContext';
 import { SoundProvider } from '@/contexts/SoundContext';
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
@@ -17,9 +18,11 @@ const robotoMono = Roboto_Mono({
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <main className={`${sora.className} ${robotoMono.variable}`}>
-      <SoundProvider>
-        <Component {...pageProps} />
-      </SoundProvider>
+      <ConfigProvider>
+        <SoundProvider>
+          <Component {...pageProps} />
+        </SoundProvider>
+      </ConfigProvider>
     </main>
   );
 }

@@ -35,6 +35,8 @@ export default function Home() {
     userInput,
     words,
     timeLeft,
+    mode,
+    setIsPaused,
     resume,
     start,
     handleKeyDown,
@@ -68,6 +70,12 @@ export default function Home() {
     }
   }, [activeWordIndex, isStarted]);
 
+  useEffect(() => {
+    if (isSettingsOpen) {
+      setIsPaused(true);
+    }
+  }, [isSettingsOpen]);
+
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
       <Header onOpenSettings={() => setIsSettingsOpen(true)} />
@@ -86,7 +94,7 @@ export default function Home() {
         <div className="flex gap-3 px-8 items-center justify-center">
           <p className="text-preset-4 font-medium text-neutral-400">Time:</p>
           <span
-            className={`text-preset-2 ${isStarted ? 'text-yellow-500' : 'text-neutral-0'}`}
+            className={`text-preset-2 ${isStarted && mode === 'timed' ? 'text-yellow-500' : 'text-neutral-0'}`}
           >
             {formatTime(timeLeft)}
           </span>
