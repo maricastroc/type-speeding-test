@@ -13,9 +13,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useSound } from '@/contexts/SoundContext';
 import { WordDisplay } from '@/components/WordDisplay';
-import { formatTime } from '@/utils/formatTime';
 import { TagsContainer } from '@/components/TagsContainer';
 import { PauseWarning } from '@/components/PauseWarning';
+import { MetricsPanel } from '@/components/MetricsPanel';
 
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
@@ -36,6 +36,7 @@ export default function Home() {
     words,
     timeLeft,
     mode,
+    metrics,
     setIsPaused,
     resume,
     start,
@@ -80,26 +81,12 @@ export default function Home() {
     <div className="relative min-h-screen p-8 xl:px-28">
       <Header onOpenSettings={() => setIsSettingsOpen(true)} />
 
-      <div className="mt-16 flex w-full items-center justify-center border-b pb-4 border-b-neutral-700 divide-x divide-neutral-600">
-        <div className="flex gap-3 px-8 items-center justify-center">
-          <p className="text-preset-4 font-medium text-neutral-400">WPM:</p>
-          <span className="text-preset-2">0</span>
-        </div>
-        <div className="flex gap-3 px-8 items-center justify-center">
-          <p className="text-preset-4 font-medium text-neutral-400">
-            Accuracy:
-          </p>
-          <span className="text-preset-2">100%</span>
-        </div>
-        <div className="flex gap-3 px-8 items-center justify-center">
-          <p className="text-preset-4 font-medium text-neutral-400">Time:</p>
-          <span
-            className={`text-preset-2 ${isStarted && mode === 'timed' ? 'text-yellow-500' : 'text-neutral-0'}`}
-          >
-            {formatTime(timeLeft)}
-          </span>
-        </div>
-      </div>
+      <MetricsPanel
+        isStarted={isStarted}
+        metrics={metrics}
+        mode={mode}
+        timeLeft={timeLeft}
+      />
 
       <div className="mt-16 relative mx-auto text-left">
         <div

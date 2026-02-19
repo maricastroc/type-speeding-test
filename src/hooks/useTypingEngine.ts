@@ -73,6 +73,8 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
       const currentWord = words[activeWordIndex];
 
       if (key.length === 1 && key !== ' ') {
+        if (currentTyped.length >= currentWord.length + 10) return;
+
         const isCorrect = key === currentWord[currentTyped.length];
 
         setTotalChars((prev) => prev + 1);
@@ -114,13 +116,18 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
   const metrics = useMemo(() => {
     if (!startTime || totalChars === 0) return { wpm: 0, accuracy: 100 };
 
-    const elapsedMinutes = (Date.now() - startTime) / 60000;
-    const wpm = Math.round(totalChars / 5 / (elapsedMinutes || 0.01));
+    const now = Date.now();
+    const elapsedMinutes = (now - startTime) / 60000;
+
+    const wpm = Math.round(totalChars / 5 / (elapsedMinutes || 0.001));
 
     const accuracy = Math.round(((totalChars - errors) / totalChars) * 100);
 
-    return { wpm, accuracy: Math.max(0, accuracy) };
-  }, [totalChars, errors, startTime]);
+    return {
+      wpm: Math.max(0, wpm),
+      accuracy: Math.max(0, accuracy),
+    };
+  }, [totalChars, errors, startTime, timeLeft]);
 
   const resume = useCallback(() => {
     setIsPaused(false);
