@@ -36,21 +36,27 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (isStarted && !isPaused && mode === 'timed' && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            setIsStarted(false);
-            options?.onFinished?.();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (isStarted && !isPaused) {
+      if (mode === 'timed' && timeLeft > 0) {
+        interval = setInterval(() => {
+          setTimeLeft((prev) => {
+            if (prev <= 1) {
+              setIsStarted(false);
+              options?.onFinished?.();
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else if (mode === 'passage') {
+        interval = setInterval(() => {
+          setTimeLeft((prev) => prev + 1);
+        }, 1000);
+      }
     }
 
     return () => clearInterval(interval);
-  }, [isStarted, isPaused, timeLeft, options]);
+  }, [isStarted, isPaused, timeLeft, mode, options]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -65,7 +71,11 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
 
   const handleKeyDown = useCallback(
     (key: string) => {
-      if (!isStarted || timeLeft === 0) return;
+      if (!isStarted) return;
+
+      if (mode === 'timed' && timeLeft === 0) return;
+
+      if (isPaused) return;
 
       if (!startTime) setStartTime(Date.now());
 
@@ -73,17 +83,18 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
       const currentWord = words[activeWordIndex];
 
       if (key.length === 1 && key !== ' ') {
-        if (currentTyped.length >= currentWord.length + 10) return;
-
         const isCorrect = key === currentWord[currentTyped.length];
 
-        setTotalChars((prev) => prev + 1);
         if (isCorrect) {
           options?.onSuccess?.();
         } else {
           setErrors((prev) => prev + 1);
           options?.onError?.();
         }
+
+        setTotalChars((prev) => prev + 1);
+
+        if (currentTyped.length >= currentWord.length + 10) return;
 
         const newUserInput = [...userInput];
         newUserInput[activeWordIndex] = currentTyped + key;
@@ -110,14 +121,23 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
         return;
       }
     },
-    [isStarted, activeWordIndex, words, userInput, startTime, timeLeft, options]
+    [
+      isStarted,
+      mode,
+      isPaused,
+      activeWordIndex,
+      words,
+      userInput,
+      startTime,
+      timeLeft,
+      options,
+    ]
   );
 
   const metrics = useMemo(() => {
     if (!startTime || totalChars === 0) return { wpm: 0, accuracy: 100 };
 
-    const now = Date.now();
-    const elapsedMinutes = (now - startTime) / 60000;
+    const elapsedMinutes = (Date.now() - startTime) / 60000;
 
     const wpm = Math.round(totalChars / 5 / (elapsedMinutes || 0.001));
 

@@ -74,8 +74,10 @@ export default function Home() {
   useEffect(() => {
     if (isSettingsOpen) {
       setIsPaused(true);
+    } else if (isStarted) {
+      setIsPaused(false);
     }
-  }, [isSettingsOpen]);
+  }, [isSettingsOpen, isStarted]);
 
   return (
     <div className="relative min-h-screen p-8 xl:px-28">

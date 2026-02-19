@@ -46,7 +46,7 @@ export const SettingsRow = ({
         {options.map((option) => (
           <button
             key={option.value}
-            onClick={() => onChange(option.value)} // Repassa para o pai
+            onClick={() => onChange(option.value)}
             className={`
               px-4 py-2 rounded-lg text-preset-5 transition
               ${
