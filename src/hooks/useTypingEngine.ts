@@ -1,4 +1,6 @@
 import { useConfig } from '@/contexts/ConfigContext';
+import { Keystroke } from '@/types/keyStore';
+import { buildChartData } from '@/utils/buildChartData';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 
 interface TypingOptions {
@@ -11,32 +13,143 @@ interface TypingOptions {
 export const useTypingEngine = (text: string, options?: TypingOptions) => {
   const { mode } = useConfig();
 
-  const [activeWordIndex, setActiveWordIndex] = useState(0);
+  const [showChart, setShowChart] = useState(false);
 
-  const [userInput, setUserInput] = useState<string[]>(() =>
+  const [activeWordIndex, setActiveWordIndex] = useState(0);
+  const [userInput, setUserInput] = useState<string[]>(
     text.split(' ').map(() => '')
   );
 
   const [isStarted, setIsStarted] = useState(false);
-
   const [isPaused, setIsPaused] = useState(false);
-
   const [startTime, setStartTime] = useState<number | null>(null);
 
-  const [totalChars, setTotalChars] = useState(0);
+  const [keystrokes, setKeystrokes] = useState<Keystroke[]>([]);
 
-  const [errors, setErrors] = useState(0);
-
-  const [timeLeft, setTimeLeft] = useState(() =>
+  const [timeLeft, setTimeLeft] = useState(
     mode === 'timed' ? options?.initialTime || 60 : 0
   );
 
   const words = useMemo(() => text.split(' '), [text]);
 
+  const start = useCallback(() => {
+    if (!startTime) {
+      setStartTime(Date.now());
+      setIsStarted(true);
+    }
+  }, [startTime]);
+
+  const handleKeyDown = useCallback(
+    (key: string) => {
+      if (isPaused) return;
+      if (mode === 'timed' && timeLeft === 0) return;
+
+      const currentWord = words[activeWordIndex];
+      const currentTyped = userInput[activeWordIndex];
+
+      if (!currentWord || currentTyped === undefined) return;
+
+      let effectiveStart = startTime;
+
+      if (!effectiveStart) {
+        effectiveStart = Date.now();
+        setStartTime(effectiveStart);
+        setIsStarted(true);
+      }
+
+      const elapsed = Date.now() - effectiveStart;
+
+      if (key.length === 1 && key !== ' ') {
+        const isCorrect = key === currentWord[currentTyped.length];
+
+        setKeystrokes((prev) => [
+          ...prev,
+          {
+            timestampMs: elapsed,
+            isCorrect,
+            typedChar: key,
+          },
+        ]);
+
+        if (isCorrect) {
+          options?.onSuccess?.();
+        } else {
+          options?.onError?.();
+        }
+
+        if (currentTyped.length >= currentWord.length + 10) return;
+
+        setUserInput((prev) => {
+          const updated = [...prev];
+          updated[activeWordIndex] = currentTyped + key;
+          return updated;
+        });
+
+        return;
+      }
+
+      if (key === ' ') {
+        if (currentTyped.length > 0 && activeWordIndex < words.length - 1) {
+          setActiveWordIndex((prev) => prev + 1);
+        }
+        return;
+      }
+
+      if (key === 'Backspace') {
+        setUserInput((prev) => {
+          const updated = [...prev];
+          updated[activeWordIndex] = currentTyped.slice(0, -1);
+          return updated;
+        });
+      }
+    },
+    [
+      isPaused,
+      mode,
+      timeLeft,
+      words,
+      activeWordIndex,
+      userInput,
+      startTime,
+      options,
+    ]
+  );
+
+  const chartData = useMemo(() => {
+    if (!startTime) return [];
+
+    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+
+    return buildChartData(keystrokes, elapsedSeconds);
+  }, [keystrokes, startTime, timeLeft]);
+
+  const metrics = useMemo(() => {
+    if (!chartData.length) return { wpm: 0, accuracy: 100 };
+
+    const last = chartData[chartData.length - 1];
+
+    const totalCorrect = keystrokes.filter(
+      (k) => k.isCorrect && k.typedChar !== 'Backspace'
+    ).length;
+
+    const totalTyped = keystrokes.filter(
+      (k) => k.typedChar !== 'Backspace'
+    ).length;
+
+    const accuracy = totalTyped
+      ? Math.round((totalCorrect / totalTyped) * 100)
+      : 100;
+
+    return {
+      wpm: last.wpm,
+      accuracy,
+    };
+  }, [chartData, keystrokes]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (isStarted && !isPaused) {
+    if (startTime && !isPaused) {
       if (mode === 'timed' && timeLeft > 0) {
         interval = setInterval(() => {
           setTimeLeft((prev) => {
@@ -48,7 +161,9 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
             return prev - 1;
           });
         }, 1000);
-      } else if (mode === 'passage') {
+      }
+
+      if (mode === 'passage') {
         interval = setInterval(() => {
           setTimeLeft((prev) => prev + 1);
         }, 1000);
@@ -56,123 +171,48 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     }
 
     return () => clearInterval(interval);
-  }, [isStarted, isPaused, timeLeft, mode, options]);
+  }, [startTime, isPaused, mode]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && isStarted && !isPaused) {
-        setIsPaused(true);
+      if (document.visibilityState === 'hidden') {
+        if (startTime && !isPaused) {
+          setIsPaused(true);
+        }
       }
     };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () =>
+
+    return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isStarted, isPaused]);
-
-  const handleKeyDown = useCallback(
-    (key: string) => {
-      if (!isStarted || isPaused) return;
-      if (mode === 'timed' && timeLeft === 0) return;
-
-      const currentWord = words[activeWordIndex];
-      const currentTyped = userInput[activeWordIndex];
-
-      if (!currentWord || currentTyped === undefined) return;
-
-      if (!startTime) setStartTime(Date.now());
-
-      if (key.length === 1 && key !== ' ') {
-        const isCorrect = key === currentWord[currentTyped.length];
-
-        if (isCorrect) {
-          options?.onSuccess?.();
-        } else {
-          setErrors((prev) => prev + 1);
-          options?.onError?.();
-        }
-
-        setTotalChars((prev) => prev + 1);
-
-        if (currentTyped.length >= currentWord.length + 10) return;
-
-        const newUserInput = [...userInput];
-        newUserInput[activeWordIndex] = currentTyped + key;
-        setUserInput(newUserInput);
-        return;
-      }
-
-      if (key === ' ') {
-        if (currentTyped.length > 0 && activeWordIndex < words.length - 1) {
-          setTotalChars((prev) => prev + 1);
-          setActiveWordIndex((prev) => prev + 1);
-        }
-        return;
-      }
-
-      if (key === 'Backspace') {
-        if (currentTyped.length === 0 && activeWordIndex > 0) {
-          setActiveWordIndex((prev) => prev - 1);
-        } else {
-          const newUserInput = [...userInput];
-          newUserInput[activeWordIndex] = currentTyped.slice(0, -1);
-          setUserInput(newUserInput);
-        }
-        return;
-      }
-    },
-    [
-      isStarted,
-      mode,
-      isPaused,
-      activeWordIndex,
-      words,
-      userInput,
-      startTime,
-      timeLeft,
-      options,
-    ]
-  );
-
-  const metrics = useMemo(() => {
-    if (!startTime || totalChars === 0) return { wpm: 0, accuracy: 100 };
-
-    const elapsedMinutes = (Date.now() - startTime) / 60000;
-
-    const wpm = Math.round(totalChars / 5 / (elapsedMinutes || 0.001));
-
-    const accuracy = Math.round(((totalChars - errors) / totalChars) * 100);
-
-    return {
-      wpm: Math.max(0, wpm),
-      accuracy: Math.max(0, accuracy),
     };
-  }, [totalChars, errors, startTime, timeLeft]);
+  }, [startTime, isPaused]);
+
+  const reset = useCallback(
+    (newText: string) => {
+      setIsStarted(false);
+      setIsPaused(false);
+      setStartTime(null);
+      setActiveWordIndex(0);
+      setUserInput(newText.split(' ').map(() => ''));
+      setKeystrokes([]);
+      setTimeLeft(mode === 'timed' ? options?.initialTime || 60 : 0);
+      setShowChart(false);
+    },
+    [mode, options?.initialTime]
+  );
 
   const resume = useCallback(() => {
     setIsPaused(false);
   }, []);
 
-  const reset = useCallback(
-    (newText: string) => {
-      setIsStarted(false);
-      setActiveWordIndex(0);
-      setIsPaused(false);
-      setUserInput(newText.split(' ').map(() => ''));
-      setStartTime(null);
-      setTotalChars(0);
-      setErrors(0);
-      setTimeLeft(mode === 'timed' ? options?.initialTime || 60 : 0);
-    },
-    [options?.initialTime, mode]
-  );
-
-  useEffect(() => {
-    if (mode === 'passage') {
-      setTimeLeft(0);
-    } else {
-      setTimeLeft(options?.initialTime || 60);
+  const totalTime = useMemo(() => {
+    if (mode === 'timed') {
+      return (options?.initialTime || 60) - timeLeft;
     }
-  }, [mode, options?.initialTime]);
+    return timeLeft;
+  }, [mode, timeLeft, options?.initialTime]);
 
   return {
     isStarted,
@@ -181,12 +221,17 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     userInput,
     words,
     mode,
-    start: () => setIsStarted(true),
-    setIsPaused,
+    showChart,
+    keystrokes,
+    totalTime,
+    setShowChart,
+    start,
     handleKeyDown,
     reset,
     resume,
+    setIsPaused,
     metrics,
     timeLeft,
+    chartData,
   };
 };

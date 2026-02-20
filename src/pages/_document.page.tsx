@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <title>Type Speeding Test</title>
+        <title>Typing Speed Test</title>
         <link
           rel="icon"
           type="image/svg"

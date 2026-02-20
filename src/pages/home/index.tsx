@@ -3,7 +3,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Header } from '@/components/Header';
 import { SettingsPanel } from '@/components/SettingsPanel';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { texts } from '@/data/texts';
 import { useTypingEngine } from '@/hooks/useTypingEngine';
 import {
@@ -18,6 +18,9 @@ import { PauseWarning } from '@/components/PauseWarning';
 import { MetricsPanel } from '@/components/MetricsPanel';
 import useRequest from '@/hooks/useRequest';
 import { useConfig } from '@/contexts/ConfigContext';
+import { ResultChart } from '@/components/ResultChart';
+import { calculateGeneralStats } from '@/utils/calculateStats';
+import { StatsDisplay } from '@/components/StatsDisplay';
 
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
@@ -50,9 +53,14 @@ export default function Home() {
     timeLeft,
     mode,
     metrics,
+    chartData,
+    showChart,
+    keystrokes,
+    totalTime,
+    setShowChart,
+    start,
     setIsPaused,
     resume,
-    start,
     handleKeyDown,
     reset,
   } = useTypingEngine(currentText, {
@@ -60,6 +68,10 @@ export default function Home() {
       playErrorSound();
     },
     onSuccess: () => playKeystroke(),
+    onFinished: () => {
+      setShowChart(true);
+      inputRef.current?.blur();
+    },
   });
 
   const handleStart = () => {
@@ -71,7 +83,13 @@ export default function Home() {
     const newText = texts[Math.floor(Math.random() * texts.length)];
     setCurrentText(newText);
     reset(newText);
+    setShowChart(false);
   };
+
+  const generalStats = useMemo(
+    () => calculateGeneralStats(keystrokes, chartData, totalTime),
+    [keystrokes, chartData, totalTime]
+  );
 
   useEffect(() => {
     if (!isStarted) return;
@@ -115,28 +133,37 @@ export default function Home() {
         timeLeft={timeLeft}
       />
 
-      <div className="mt-16 relative mx-auto text-left">
-        <div
-          className={`max-h-40 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${!isStarted || isPaused ? 'blur-xs opacity-70' : ''}`}
-          onClick={handleStart}
-        >
-          {words.map((word, wordIdx) => (
-            <div
-              key={wordIdx}
-              ref={(el) => {
-                wordsRef.current[wordIdx] = el;
-              }}
-              className="inline-block"
-            >
-              <WordDisplay
-                word={word}
-                typed={userInput[wordIdx] || ''}
-                isCurrent={wordIdx === activeWordIndex}
-                isStarted={isStarted}
-              />
-            </div>
-          ))}
+      {showChart && (
+        <div className="flex flex-col gap-4 items-center justify-center">
+          <StatsDisplay stats={generalStats} />
+          <ResultChart data={chartData} />
         </div>
+      )}
+
+      <div className="mt-16 relative mx-auto text-left">
+        {!showChart && (
+          <div
+            className={`max-h-40 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${!isStarted || isPaused ? 'blur-xs opacity-70' : ''}`}
+            onClick={handleStart}
+          >
+            {words.map((word, wordIdx) => (
+              <div
+                key={wordIdx}
+                ref={(el) => {
+                  wordsRef.current[wordIdx] = el;
+                }}
+                className="inline-block"
+              >
+                <WordDisplay
+                  word={word}
+                  typed={userInput[wordIdx] || ''}
+                  isCurrent={wordIdx === activeWordIndex}
+                  isStarted={isStarted}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         <input
           ref={inputRef}
@@ -154,7 +181,7 @@ export default function Home() {
           />
         )}
 
-        {!isStarted && (
+        {!isStarted && !showChart && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 rounded-lg">
             <button
               onClick={handleStart}
