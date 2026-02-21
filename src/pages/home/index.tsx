@@ -18,9 +18,8 @@ import { PauseWarning } from '@/components/PauseWarning';
 import { MetricsPanel } from '@/components/MetricsPanel';
 import useRequest from '@/hooks/useRequest';
 import { useConfig } from '@/contexts/ConfigContext';
-import { ResultChart } from '@/components/ResultChart';
 import { calculateGeneralStats } from '@/utils/calculateStats';
-import { StatsDisplay } from '@/components/StatsDisplay';
+import { ResultSection } from '@/components/ResultSection';
 
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
@@ -54,10 +53,11 @@ export default function Home() {
     mode,
     metrics,
     chartData,
-    showChart,
+    isCompleted,
     keystrokes,
     totalTime,
-    setShowChart,
+    finishedTime,
+    setIsCompleted,
     start,
     setIsPaused,
     resume,
@@ -69,7 +69,8 @@ export default function Home() {
     },
     onSuccess: () => playKeystroke(),
     onFinished: () => {
-      setShowChart(true);
+      setIsCompleted(true);
+
       inputRef.current?.blur();
     },
   });
@@ -83,7 +84,7 @@ export default function Home() {
     const newText = texts[Math.floor(Math.random() * texts.length)];
     setCurrentText(newText);
     reset(newText);
-    setShowChart(false);
+    setIsCompleted(false);
   };
 
   const generalStats = useMemo(
@@ -126,22 +127,26 @@ export default function Home() {
     <div className="relative min-h-screen p-8 xl:px-28">
       <Header onOpenSettings={() => setIsSettingsOpen(true)} />
 
-      <MetricsPanel
-        isStarted={isStarted}
-        metrics={metrics}
-        mode={mode}
-        timeLeft={timeLeft}
-      />
+      {isCompleted && (
+        <ResultSection
+          metrics={metrics}
+          finishedTime={finishedTime}
+          chartData={chartData}
+          generalStats={generalStats}
+        />
+      )}
 
-      {showChart && (
-        <div className="flex flex-col gap-4 items-center justify-center">
-          <StatsDisplay stats={generalStats} />
-          <ResultChart data={chartData} />
-        </div>
+      {!isCompleted && (
+        <MetricsPanel
+          isStarted={isStarted}
+          metrics={metrics}
+          mode={mode}
+          timeLeft={timeLeft}
+        />
       )}
 
       <div className="mt-16 relative mx-auto text-left">
-        {!showChart && (
+        {!isCompleted && (
           <div
             className={`max-h-40 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${!isStarted || isPaused ? 'blur-xs opacity-70' : ''}`}
             onClick={handleStart}
@@ -181,7 +186,7 @@ export default function Home() {
           />
         )}
 
-        {!isStarted && !showChart && (
+        {!isStarted && !isCompleted && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 rounded-lg">
             <button
               onClick={handleStart}

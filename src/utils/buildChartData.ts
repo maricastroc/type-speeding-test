@@ -4,16 +4,6 @@ export const buildChartData = (
   keystrokes: Keystroke[],
   durationSec: number
 ) => {
-  console.log('buildChartData inputs:', {
-    keystrokesCount: keystrokes.length,
-    durationSec,
-  });
-
-  if (!keystrokes.length || durationSec <= 0) {
-    console.log('Retornando array vazio - condições não atendidas');
-    return [];
-  }
-
   const buckets: Record<number, Keystroke[]> = {};
 
   for (const k of keystrokes) {
@@ -22,14 +12,11 @@ export const buildChartData = (
     buckets[second].push(k);
   }
 
-  console.log('Buckets criados:', Object.keys(buckets).map(Number));
-
   let cumulativeCorrect = 0;
   let cumulativeTotal = 0;
   const data = [];
 
   const maxSecond = Math.max(durationSec, ...Object.keys(buckets).map(Number));
-  console.log('maxSecond:', maxSecond);
 
   for (let s = 1; s <= maxSecond; s++) {
     const ksInSecond = buckets[s] || [];
@@ -47,10 +34,8 @@ export const buildChartData = (
     cumulativeCorrect += correct;
     cumulativeTotal += total;
 
-    // Minutos decorridos até este segundo
     const minutes = s / 60;
 
-    // Log para debug do primeiro segundo
     if (s === 1) {
       console.log('Segundo 1:', {
         cumulativeCorrect,
@@ -61,7 +46,6 @@ export const buildChartData = (
       });
     }
 
-    // Calcular WPM com validação extra
     let wpm = 0;
     let raw = 0;
 
@@ -99,14 +83,8 @@ export const buildChartData = (
       errorCount: errors,
     };
 
-    // Log do ponto criado
-    if (s <= 3) {
-      console.log(`Ponto segundo ${s}:`, point);
-    }
-
     data.push(point);
   }
 
-  console.log('Dados finais:', data);
   return data;
 };

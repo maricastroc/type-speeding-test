@@ -24,7 +24,7 @@ export const Header = ({ onOpenSettings }: HeaderProps) => {
             <h1 className="text-2xl font-bold bg-linear-to-t from-blue-400 via-blue-200 to-blue-100 bg-clip-text text-transparent">
               Typing Speed Test
             </h1>
-            <p className="text-neutral-400 text-preset-6">
+            <p className="text-neutral-400 text-preset-7">
               Type as fast as you can in 60 seconds
             </p>
           </div>

@@ -1,7 +1,8 @@
 import { useConfig } from '@/contexts/ConfigContext';
 import { Keystroke } from '@/types/keyStore';
+import { RoundStats } from '@/types/roundStats';
 import { buildChartData } from '@/utils/buildChartData';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 
 interface TypingOptions {
   onError?: () => void;
@@ -11,9 +12,7 @@ interface TypingOptions {
 }
 
 export const useTypingEngine = (text: string, options?: TypingOptions) => {
-  const { mode } = useConfig();
-
-  const [showChart, setShowChart] = useState(false);
+  const { mode, difficulty } = useConfig();
 
   const [activeWordIndex, setActiveWordIndex] = useState(0);
   const [userInput, setUserInput] = useState<string[]>(
@@ -22,15 +21,20 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
 
   const [isStarted, setIsStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [finishedTime, setFinishedTime] = useState<number | null>(null);
+  const [pausedTime, setPausedTime] = useState<number | null>(null);
+  const [totalPausedDuration, setTotalPausedDuration] = useState(0);
 
   const [keystrokes, setKeystrokes] = useState<Keystroke[]>([]);
 
-  const [timeLeft, setTimeLeft] = useState(
-    mode === 'timed' ? options?.initialTime || 60 : 0
-  );
+  const [initialTime] = useState(options?.initialTime || 60);
+  const [timeLeft, setTimeLeft] = useState(mode === 'timed' ? initialTime : 0);
 
   const words = useMemo(() => text.split(' '), [text]);
+
+  const animationFrameRef = useRef<number | null>(null);
 
   const start = useCallback(() => {
     if (!startTime) {
@@ -39,9 +43,56 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     }
   }, [startTime]);
 
+  const updateTime = useCallback(() => {
+    if (!startTime || isPaused || isCompleted) return;
+
+    const now = Date.now();
+    const effectiveStart = startTime + totalPausedDuration;
+
+    if (mode === 'timed') {
+      const elapsed = Math.floor((now - effectiveStart) / 1000);
+      const newTimeLeft = Math.max(0, initialTime - elapsed);
+
+      setTimeLeft(newTimeLeft);
+
+      if (newTimeLeft <= 0) {
+        finishTest();
+        return;
+      }
+    } else {
+      const elapsed = Math.floor((now - effectiveStart) / 1000);
+      setTimeLeft(elapsed);
+    }
+
+    animationFrameRef.current = requestAnimationFrame(updateTime);
+  }, [
+    startTime,
+    isPaused,
+    isCompleted,
+    mode,
+    initialTime,
+    totalPausedDuration,
+  ]);
+
+  useEffect(() => {
+    if (isStarted && !isPaused && !isCompleted) {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+
+      animationFrameRef.current = requestAnimationFrame(updateTime);
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isStarted, isPaused, isCompleted, updateTime]);
+
   const handleKeyDown = useCallback(
     (key: string) => {
-      if (isPaused) return;
+      if (isPaused || isCompleted) return;
       if (mode === 'timed' && timeLeft === 0) return;
 
       const currentWord = words[activeWordIndex];
@@ -57,7 +108,7 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
         setIsStarted(true);
       }
 
-      const elapsed = Date.now() - effectiveStart;
+      const elapsed = Date.now() - effectiveStart - totalPausedDuration;
 
       if (key.length === 1 && key !== ' ') {
         const isCorrect = key === currentWord[currentTyped.length];
@@ -112,16 +163,37 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
       userInput,
       startTime,
       options,
+      totalPausedDuration,
     ]
   );
+
+  const finishTest = useCallback(() => {
+    if (isCompleted || !startTime) return;
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    const elapsedSeconds = Math.floor(
+      (Date.now() - startTime - totalPausedDuration) / 1000
+    );
+
+    setFinishedTime(elapsedSeconds);
+    setIsCompleted(true);
+    setIsStarted(false);
+    options?.onFinished?.();
+  }, [isCompleted, startTime, totalPausedDuration, options]);
 
   const chartData = useMemo(() => {
     if (!startTime) return [];
 
-    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+    const elapsedSeconds =
+      finishedTime !== null
+        ? finishedTime
+        : Math.floor((Date.now() - startTime - totalPausedDuration) / 1000);
 
     return buildChartData(keystrokes, elapsedSeconds);
-  }, [keystrokes, startTime, timeLeft]);
+  }, [keystrokes, startTime, finishedTime, totalPausedDuration]);
 
   const metrics = useMemo(() => {
     if (!chartData.length) return { wpm: 0, accuracy: 100 };
@@ -147,37 +219,23 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
   }, [chartData, keystrokes]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (startTime && !isPaused) {
-      if (mode === 'timed' && timeLeft > 0) {
-        interval = setInterval(() => {
-          setTimeLeft((prev) => {
-            if (prev <= 1) {
-              setIsStarted(false);
-              options?.onFinished?.();
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      }
-
-      if (mode === 'passage') {
-        interval = setInterval(() => {
-          setTimeLeft((prev) => prev + 1);
-        }, 1000);
-      }
-    }
-
-    return () => clearInterval(interval);
-  }, [startTime, isPaused, mode]);
-
-  useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        if (startTime && !isPaused) {
+        if (startTime && !isPaused && !isCompleted) {
+          setPausedTime(Date.now());
           setIsPaused(true);
+
+          // Cancela o loop de animação
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+          }
+        }
+      } else {
+        if (isPaused && pausedTime) {
+          // Calcula quanto tempo ficou pausado
+          const pauseDuration = Date.now() - pausedTime;
+          setTotalPausedDuration((prev) => prev + pauseDuration);
+          setPausedTime(null);
         }
       }
     };
@@ -187,32 +245,73 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [startTime, isPaused]);
+  }, [startTime, isPaused, isCompleted, pausedTime]);
 
   const reset = useCallback(
     (newText: string) => {
+      // Cancela o loop de animação
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+
       setIsStarted(false);
       setIsPaused(false);
       setStartTime(null);
       setActiveWordIndex(0);
       setUserInput(newText.split(' ').map(() => ''));
       setKeystrokes([]);
-      setTimeLeft(mode === 'timed' ? options?.initialTime || 60 : 0);
-      setShowChart(false);
+      setTimeLeft(mode === 'timed' ? initialTime : 0);
+      setIsCompleted(false);
+      setFinishedTime(null);
+      setPausedTime(null);
+      setTotalPausedDuration(0);
     },
-    [mode, options?.initialTime]
+    [mode, initialTime]
   );
 
   const resume = useCallback(() => {
     setIsPaused(false);
+    setPausedTime(null);
   }, []);
 
   const totalTime = useMemo(() => {
+    if (finishedTime !== null) return finishedTime;
+
     if (mode === 'timed') {
-      return (options?.initialTime || 60) - timeLeft;
+      return initialTime - timeLeft;
     }
+
     return timeLeft;
-  }, [mode, timeLeft, options?.initialTime]);
+  }, [finishedTime, mode, timeLeft, initialTime]);
+
+  useEffect(() => {
+    if (isCompleted) return;
+
+    const isLastWord = activeWordIndex === words.length - 1;
+    const currentWord = words[activeWordIndex];
+    const currentTyped = userInput[activeWordIndex];
+
+    const finishedAllWords = isLastWord && currentTyped === currentWord;
+
+    if (finishedAllWords) {
+      finishTest();
+    }
+  }, [userInput, activeWordIndex, words, isCompleted, finishTest]);
+
+  const getRoundStats = useCallback((): Omit<
+    RoundStats,
+    'id' | 'timestamp'
+  > | null => {
+    if (!finishedTime || !metrics.wpm) return null;
+
+    return {
+      mode,
+      difficulty: difficulty,
+      wpm: metrics.wpm,
+      accuracy: metrics.accuracy,
+      time: finishedTime,
+    };
+  }, [finishedTime, metrics, keystrokes, mode, text, words]);
 
   return {
     isStarted,
@@ -221,10 +320,12 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     userInput,
     words,
     mode,
-    showChart,
     keystrokes,
     totalTime,
-    setShowChart,
+    isCompleted,
+    finishedTime,
+    getRoundStats,
+    setIsCompleted,
     start,
     handleKeyDown,
     reset,

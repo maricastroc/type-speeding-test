@@ -31,48 +31,60 @@ export const ResultChart = ({ data }: { data: ChartPoint[] }) => {
 
         <XAxis
           dataKey="second"
-          stroke="#52525b"
+          stroke="#717178"
           axisLine={false}
           tickLine={false}
+          label={{
+            value: 'Seconds',
+            offset: -5,
+            position: 'insideBottom',
+            style: { fill: '#949497', fontSize: 11 },
+          }}
         />
 
-        <YAxis stroke="#52525b" axisLine={false} tickLine={false} />
+        <YAxis
+          stroke="#949497"
+          axisLine={false}
+          tickLine={false}
+          label={{
+            value: 'Words per minute',
+            angle: -90,
+            position: 'insideLeft',
+            style: { fill: '#949497', fontSize: 11 },
+          }}
+        />
 
         <Tooltip content={<CustomTooltip />} />
 
-        {/* RAW */}
         <Line
           type="monotone"
           dataKey="raw"
-          stroke="#4ade80"
+          stroke="#4DD67B"
           strokeWidth={2}
           dot={false}
           name="Raw"
         />
 
-        {/* WPM */}
         <Line
           type="monotone"
           dataKey="wpm"
-          stroke="#60a5fa"
+          stroke="#4CA6FF"
           strokeWidth={2}
           dot={false}
           name="WPM"
         />
 
-        {/* Burst */}
         <Line
           type="monotone"
           dataKey="burst"
-          stroke="#a1a1aa"
+          stroke="#949497"
           strokeDasharray="4 4"
           strokeWidth={2}
           dot={false}
           name="Burst"
         />
 
-        {/* Errors */}
-        <Scatter dataKey="errors" fill="#ef4444" name="Errors" />
+        <Scatter dataKey="errors" fill="#D64D5B" name="Errors" />
       </LineChart>
     </ResponsiveContainer>
   );

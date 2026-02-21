@@ -1,5 +1,5 @@
 import { ChartPoint } from '@/types/ChartPoint';
-import { GeneralStats } from './generalStats';
+import { GeneralStats } from '@/types/generalStats';
 import { Keystroke } from '@/types/keyStore';
 
 export const calculateGeneralStats = (
