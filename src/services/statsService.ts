@@ -18,6 +18,7 @@ export class StatsService {
       const existing = this.getStoredRounds();
       const updated = [newRound, ...existing].slice(0, MAX_STORED_ROUNDS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      console.log('ok');
     } catch (error) {
       console.error('Error saving statistics:', error);
       this.cleanupOldRounds();

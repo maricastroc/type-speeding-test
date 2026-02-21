@@ -29,7 +29,7 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
 
   const [keystrokes, setKeystrokes] = useState<Keystroke[]>([]);
 
-  const [initialTime] = useState(options?.initialTime || 60);
+  const [initialTime] = useState(10);
   const [timeLeft, setTimeLeft] = useState(mode === 'timed' ? initialTime : 0);
 
   const words = useMemo(() => text.split(' '), [text]);

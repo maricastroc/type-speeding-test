@@ -6,6 +6,7 @@ import { SettingsPanel } from '@/components/SettingsPanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { texts } from '@/data/texts';
 import { useTypingEngine } from '@/hooks/useTypingEngine';
+import * as Dialog from '@radix-ui/react-dialog';
 import {
   faAngleRight,
   faArrowRotateRight,
@@ -20,6 +21,7 @@ import useRequest from '@/hooks/useRequest';
 import { useConfig } from '@/contexts/ConfigContext';
 import { calculateGeneralStats } from '@/utils/calculateStats';
 import { ResultSection } from '@/components/ResultSection';
+import { HistorySection } from '@/components/HistorySection';
 
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
@@ -27,6 +29,8 @@ export default function Home() {
   const { category, difficulty } = useConfig();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const [showHistorySection, setShowHistorySection] = useState(false);
 
   const [currentText, setCurrentText] = useState('');
 
@@ -125,7 +129,20 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
-      <Header onOpenSettings={() => setIsSettingsOpen(true)} />
+      <Header
+        onOpenHistorySection={() => setShowHistorySection(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
+
+      <Dialog.Root
+        open={showHistorySection}
+        onOpenChange={setShowHistorySection}
+      >
+        <HistorySection
+          open={showHistorySection}
+          onOpenChange={(value) => setShowHistorySection(value)}
+        />
+      </Dialog.Root>
 
       {isCompleted && (
         <ResultSection

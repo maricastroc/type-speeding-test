@@ -2,13 +2,17 @@
 
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGear } from '@fortawesome/free-solid-svg-icons';
+import { faBell, faGear } from '@fortawesome/free-solid-svg-icons';
 
 type HeaderProps = {
   onOpenSettings: (value: boolean) => void;
+  onOpenHistorySection: (value: boolean) => void;
 };
 
-export const Header = ({ onOpenSettings }: HeaderProps) => {
+export const Header = ({
+  onOpenSettings,
+  onOpenHistorySection,
+}: HeaderProps) => {
   return (
     <>
       <div className="flex justify-between w-full">
@@ -46,12 +50,21 @@ export const Header = ({ onOpenSettings }: HeaderProps) => {
             </span>
           </div>
 
-          <button
-            onClick={() => onOpenSettings(true)}
-            className="pl-4 hover:text-blue-400 transition-colors"
-          >
-            <FontAwesomeIcon icon={faGear} size="lg" />
-          </button>
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => onOpenSettings(true)}
+              className="cursor-pointer pl-4 hover:text-blue-400 transition-colors"
+            >
+              <FontAwesomeIcon icon={faGear} size="lg" />
+            </button>
+
+            <button
+              onClick={() => onOpenHistorySection(true)}
+              className="cursor-pointer pl-3 hover:text-blue-400 transition-colors"
+            >
+              <FontAwesomeIcon icon={faBell} size="lg" />
+            </button>
+          </div>
         </div>
       </div>
     </>

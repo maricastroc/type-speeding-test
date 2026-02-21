@@ -5,7 +5,7 @@ import { GeneralStats } from '@/types/generalStats';
 import { ChartPoint } from '@/types/ChartPoint';
 import { ResumeSection } from './ResumeSection';
 import { useRoundStats } from '@/hooks/useRoundStats';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 type ResultSectionProps = {
   generalStats: GeneralStats;
@@ -24,16 +24,21 @@ export const ResultSection = ({
   generalStats,
 }: ResultSectionProps) => {
   const { saveRound } = useRoundStats();
+  const hasSavedRef = useRef(false);
 
   useEffect(() => {
-    if (finishedTime && metrics.wpm > 0) {
-      saveRound({
-        wpm: metrics.wpm,
-        accuracy: metrics.accuracy,
-        time: finishedTime,
-      });
-    }
-  }, [finishedTime, metrics, generalStats, saveRound]);
+    if (!finishedTime || metrics.wpm <= 0) return;
+
+    if (hasSavedRef.current) return;
+
+    saveRound({
+      wpm: metrics.wpm,
+      accuracy: metrics.accuracy,
+      time: finishedTime,
+    });
+
+    hasSavedRef.current = true;
+  }, [finishedTime, metrics.wpm, metrics.accuracy, saveRound]);
 
   return (
     <div className="mt-18 flex flex-col items-center justify-center gap-3">

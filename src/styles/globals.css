@@ -172,6 +172,42 @@
   animation: slideUp 0.3s ease-out;
 }
 
+@keyframes overlayShow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes overlayHide {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+.animate-overlayShow {
+  animation: overlayShow 200ms ease-out forwards;
+}
+
+.animate-overlayHide {
+  animation: overlayHide 150ms ease-in forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideOutRight {
+  animation: slideOutRight 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
