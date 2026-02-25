@@ -6,12 +6,12 @@ import { buildChartData } from '@/utils/buildChartData';
 
 import type { Keystroke } from '@/types/keyStore';
 import type { RoundStats } from '@/types/roundStats';
-import type { historyStats } from '@/types/historyStats';
+import type { HistoryStats } from '@/types/historyStats';
 
 interface TypingOptions {
   onError?: () => void;
   onSuccess?: () => void;
-  onFinished?: (data: historyStats) => void;
+  onFinished?: (data: HistoryStats) => void;
   initialTime?: number;
 }
 
@@ -47,6 +47,14 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     isRunning,
     resetTimer,
   } = useTimer(options?.initialTime || 10, mode);
+
+  const elapsedSeconds = useMemo(() => {
+    if (mode === 'timed') {
+      return initialTime - elapsed;
+    } else {
+      return elapsed;
+    }
+  }, [mode, elapsed, initialTime]);
 
   const handleKeyDown = useCallback(
     (key: string) => {
@@ -121,6 +129,7 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
   const reset = useCallback(
     (newText: string) => {
       const newWords = newText.split(' ');
+      setHasStarted(false);
       resetTimer();
 
       hasSavedRef.current = false;
@@ -145,22 +154,27 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
   }, [keystrokes, totalTimeSpent]);
 
   const metrics = useMemo(() => {
-    if (!chartData.length) return { wpm: 0, accuracy: 100 };
-    const last = chartData[chartData.length - 1];
-    const totalTyped = keystrokes.filter(
-      (k) => k.typedChar !== 'Backspace'
-    ).length;
-    const totalCorrect = keystrokes.filter(
-      (k) => k.isCorrect && k.typedChar !== 'Backspace'
-    ).length;
+    if (!hasStarted || keystrokes.length === 0) {
+      return { wpm: 0, accuracy: 100 };
+    }
 
-    return {
-      wpm: last.wpm,
-      accuracy: totalTyped
-        ? Math.round((totalCorrect / totalTyped) * 100)
-        : 100,
-    };
-  }, [chartData, keystrokes]);
+    const validKeystrokes = keystrokes.filter(
+      (k) => k.typedChar !== 'Backspace'
+    );
+    const totalTyped = validKeystrokes.length;
+    const totalCorrect = validKeystrokes.filter((k) => k.isCorrect).length;
+
+    // 👇 USA O elapsedSeconds CALCULADO
+    const minutes = Math.max(0.01, elapsedSeconds / 60);
+
+    const rawWpm = totalCorrect / 5 / minutes;
+    const wpm = Math.round(rawWpm);
+
+    const accuracy =
+      totalTyped > 0 ? Math.round((totalCorrect / totalTyped) * 100) : 100;
+
+    return { wpm, accuracy };
+  }, [keystrokes, elapsedSeconds, hasStarted]); // 👈 Depende do elapsedSeconds
 
   const start = useCallback(() => {
     if (!hasStarted) {

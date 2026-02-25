@@ -39,7 +39,7 @@ export default function Home() {
 
   const { saveRound } = useRoundStats();
 
-  const { data } = useRequest<{ content: string }>({
+  const { data, mutate } = useRequest<{ content: string }>({
     url: '/texts/random',
     method: 'GET',
     params: {
@@ -122,7 +122,7 @@ export default function Home() {
     if (data?.content) {
       reset(data.content);
     }
-  }, [data, reset]);
+  }, [category, difficulty, reset, data]);
 
   useEffect(() => {
     if (isSettingsOpen) {
@@ -139,6 +139,10 @@ export default function Home() {
       inputRef.current?.focus();
     }
   }, [isReady, isStarted]);
+
+  useEffect(() => {
+    mutate();
+  }, [category, difficulty, mutate]);
 
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
