@@ -145,6 +145,34 @@ export default function Home() {
     mutate();
   }, [category, difficulty, mutate]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Página ficou oculta - pausa o cronômetro
+        console.log('📱 Página oculta, pausando cronômetro');
+        if (isStarted && !isCompleted && !isPaused) {
+          pause(); // Isso pausa o timer no useTypingEngine
+        }
+      }
+    };
+
+    // Também pausa quando a janela perde foco (Alt+Tab, clicar em outra janela)
+    const handleBlur = () => {
+      console.log('📱 Janela perdeu foco, pausando cronômetro');
+      if (isStarted && !isCompleted && !isPaused) {
+        pause();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [isStarted, isCompleted, isPaused, pause]); // Dependências importantes!
+
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
       <Header
