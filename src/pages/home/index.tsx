@@ -103,6 +103,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!isReady) return;
+
     const currentWordEl = wordsRef.current[activeWordIndex];
     if (currentWordEl) {
       currentWordEl.scrollIntoView({
@@ -201,6 +202,7 @@ export default function Home() {
                   word={word}
                   typed={userInput[wordIdx] || ''}
                   isCurrent={wordIdx === activeWordIndex}
+                  isReady={isReady}
                   isStarted={isStarted}
                 />
               </div>

@@ -5,10 +5,11 @@ interface WordDisplayProps {
   typed: string;
   isCurrent: boolean;
   isStarted: boolean;
+  isReady: boolean;
 }
 
 export const WordDisplay = memo(
-  ({ word, typed, isCurrent, isStarted }: WordDisplayProps) => {
+  ({ word, typed, isCurrent, isStarted, isReady }: WordDisplayProps) => {
     const maxLength = Math.max(word.length, typed.length);
     const chars = [];
 
@@ -16,7 +17,7 @@ export const WordDisplay = memo(
       const charOriginal = word[i];
       const charTyped = typed[i];
 
-      let className = 'text-neutral-600';
+      let className = 'text-neutral-500';
       let displayChar = charOriginal;
 
       if (charTyped !== undefined) {
@@ -30,7 +31,8 @@ export const WordDisplay = memo(
         }
       }
 
-      const isCursor = isCurrent && i === typed.length && isStarted;
+      const isCursor =
+        isCurrent && i === typed.length && (isStarted || isReady);
 
       chars.push(
         <span
