@@ -22,6 +22,7 @@ import { useConfig } from '@/contexts/ConfigContext';
 import { calculateGeneralStats } from '@/utils/calculateStats';
 import { ResultSection } from '@/components/ResultSection';
 import { HistorySection } from '@/components/HistorySection';
+import { useRoundStats } from '@/hooks/useRoundStats';
 
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
@@ -35,6 +36,8 @@ export default function Home() {
   const [currentText, setCurrentText] = useState('');
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { saveRound } = useRoundStats();
 
   const { data } = useRequest<{ content: string }>({
     url: '/texts/random',
@@ -61,21 +64,22 @@ export default function Home() {
     keystrokes,
     totalTime,
     finishedTime,
-    setIsCompleted,
     start,
-    setIsPaused,
     resume,
     handleKeyDown,
     reset,
+    pause,
   } = useTypingEngine(currentText, {
     onError: () => {
       playErrorSound();
     },
     onSuccess: () => playKeystroke(),
-    onFinished: () => {
-      setIsCompleted(true);
-
+    onFinished: (stats) => {
       inputRef.current?.blur();
+
+      if (!stats) return;
+
+      saveRound(stats);
     },
   });
 
@@ -88,7 +92,6 @@ export default function Home() {
     const newText = texts[Math.floor(Math.random() * texts.length)];
     setCurrentText(newText);
     reset(newText);
-    setIsCompleted(false);
   };
 
   const generalStats = useMemo(
@@ -108,14 +111,6 @@ export default function Home() {
   }, [activeWordIndex, isStarted]);
 
   useEffect(() => {
-    if (isSettingsOpen) {
-      setIsPaused(true);
-    } else if (isStarted) {
-      setIsPaused(false);
-    }
-  }, [isSettingsOpen, isStarted]);
-
-  useEffect(() => {
     if (data) {
       setCurrentText(data?.content);
     }
@@ -126,6 +121,16 @@ export default function Home() {
       reset(data.content);
     }
   }, [data, reset]);
+
+  useEffect(() => {
+    if (isSettingsOpen) {
+      pause();
+    } else {
+      if (isStarted && !isCompleted) {
+        resume();
+      }
+    }
+  }, [isSettingsOpen, isStarted, isCompleted, pause, resume]);
 
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
@@ -194,16 +199,16 @@ export default function Home() {
           onKeyDown={(e) => handleKeyDown(e.key)}
         />
 
-        {isStarted && isPaused && (
+        {isPaused && (
           <PauseWarning
             onResume={() => {
               resume();
-              inputRef.current?.focus();
+              setTimeout(() => inputRef.current?.focus(), 10);
             }}
           />
         )}
 
-        {!isStarted && !isCompleted && (
+        {!isStarted && !isCompleted && !isPaused && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 rounded-lg">
             <button
               onClick={handleStart}

@@ -15,6 +15,19 @@ export const useRoundStats = () => {
     async (statsData: { wpm: number; accuracy: number; time: number }) => {
       const now = Date.now();
 
+      if (lastSavedRef.current) {
+        const { wpm, time } = lastSavedRef.current;
+
+        const isSameRound =
+          wpm === statsData.wpm &&
+          time === statsData.time &&
+          now - lastSavedRef.current.timestamp < 1000;
+
+        if (isSameRound) {
+          return null;
+        }
+      }
+
       const round = await StatsService.saveRound({
         ...statsData,
         mode,
@@ -60,9 +73,7 @@ export const useRoundStats = () => {
     });
 
     if (uniqueRounds.length !== rounds.length) {
-      console.log(
-        `Removidas ${rounds.length - uniqueRounds.length} duplicatas`
-      );
+      console.log(`${rounds.length - uniqueRounds.length} duplicates removed`);
       localStorage.setItem('@typing-stats', JSON.stringify(uniqueRounds));
     }
 

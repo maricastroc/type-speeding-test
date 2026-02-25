@@ -3,7 +3,7 @@ export const CustomTooltip = ({ active, payload }: any) => {
   if (!active || !payload?.length) return null;
 
   const point = payload[0].payload;
-  console.log(payload);
+
   const safeWPM =
     typeof point.wpm === 'number' && !isNaN(point.wpm) ? point.wpm : 0;
   const safeAccuracy =

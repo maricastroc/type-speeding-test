@@ -117,7 +117,6 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
         const buffers = await Promise.all(promises);
         bufferCache.current.set('error', buffers);
-        console.log('erro!');
       } catch (err) {
         console.error('Erro ao carregar som de erro:', err);
         return;

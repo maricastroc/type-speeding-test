@@ -1,132 +1,75 @@
-import { useConfig } from '@/contexts/ConfigContext';
-import { Keystroke } from '@/types/keyStore';
-import { RoundStats } from '@/types/roundStats';
-import { buildChartData } from '@/utils/buildChartData';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+
+import { useConfig } from '@/contexts/ConfigContext';
+import { useTimer } from './useTimer';
+import { buildChartData } from '@/utils/buildChartData';
+
+import type { Keystroke } from '@/types/keyStore';
+import type { RoundStats } from '@/types/roundStats';
+import type { historyStats } from '@/types/historyStats';
 
 interface TypingOptions {
   onError?: () => void;
   onSuccess?: () => void;
-  onFinished?: () => void;
+  onFinished?: (data: historyStats) => void;
   initialTime?: number;
 }
 
 export const useTypingEngine = (text: string, options?: TypingOptions) => {
   const { mode, difficulty } = useConfig();
 
-  const [activeWordIndex, setActiveWordIndex] = useState(0);
-  const [userInput, setUserInput] = useState<string[]>(
-    text.split(' ').map(() => '')
-  );
+  const words = useMemo(() => text.split(' '), [text]);
 
-  const [isStarted, setIsStarted] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [startTime, setStartTime] = useState<number | null>(null);
-  const [finishedTime, setFinishedTime] = useState<number | null>(null);
-  const [pausedTime, setPausedTime] = useState<number | null>(null);
-  const [totalPausedDuration, setTotalPausedDuration] = useState(0);
+  const [activeWordIndex, setActiveWordIndex] = useState(0);
+
+  const [userInput, setUserInput] = useState<string[]>(words.map(() => ''));
 
   const [keystrokes, setKeystrokes] = useState<Keystroke[]>([]);
 
-  const [initialTime] = useState(10);
-  const [timeLeft, setTimeLeft] = useState(mode === 'timed' ? initialTime : 0);
+  const [isCompleted, setIsCompleted] = useState(false);
 
-  const words = useMemo(() => text.split(' '), [text]);
+  const [finishedTime, setFinishedTime] = useState<number | null>(null);
 
-  const animationFrameRef = useRef<number | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
 
-  const start = useCallback(() => {
-    if (!startTime) {
-      setStartTime(Date.now());
-      setIsStarted(true);
-    }
-  }, [startTime]);
+  const initialTime = options?.initialTime || 10;
 
-  const updateTime = useCallback(() => {
-    if (!startTime || isPaused || isCompleted) return;
+  const hasSavedRef = useRef(false);
+  const isFinishingRef = useRef(false);
 
-    const now = Date.now();
-    const effectiveStart = startTime + totalPausedDuration;
-
-    if (mode === 'timed') {
-      const elapsed = Math.floor((now - effectiveStart) / 1000);
-      const newTimeLeft = Math.max(0, initialTime - elapsed);
-
-      setTimeLeft(newTimeLeft);
-
-      if (newTimeLeft <= 0) {
-        finishTest();
-        return;
-      }
-    } else {
-      const elapsed = Math.floor((now - effectiveStart) / 1000);
-      setTimeLeft(elapsed);
-    }
-
-    animationFrameRef.current = requestAnimationFrame(updateTime);
-  }, [
-    startTime,
-    isPaused,
-    isCompleted,
-    mode,
-    initialTime,
-    totalPausedDuration,
-  ]);
-
-  useEffect(() => {
-    if (isStarted && !isPaused && !isCompleted) {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-
-      animationFrameRef.current = requestAnimationFrame(updateTime);
-    }
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [isStarted, isPaused, isCompleted, updateTime]);
+  const {
+    elapsed,
+    start: startTimer,
+    pause: pauseTimer,
+    resume: resumeTimer,
+    isRunning,
+    resetTimer,
+  } = useTimer(options?.initialTime || 10, mode);
 
   const handleKeyDown = useCallback(
     (key: string) => {
-      if (isPaused || isCompleted) return;
-      if (mode === 'timed' && timeLeft === 0) return;
+      if (isCompleted) return;
+
+      if (!isRunning && !isCompleted && key !== 'Escape') {
+        setHasStarted(true);
+        startTimer();
+      }
 
       const currentWord = words[activeWordIndex];
       const currentTyped = userInput[activeWordIndex];
 
-      if (!currentWord || currentTyped === undefined) return;
-
-      let effectiveStart = startTime;
-
-      if (!effectiveStart) {
-        effectiveStart = Date.now();
-        setStartTime(effectiveStart);
-        setIsStarted(true);
-      }
-
-      const elapsed = Date.now() - effectiveStart - totalPausedDuration;
+      const timestampMs = elapsed * 1000;
 
       if (key.length === 1 && key !== ' ') {
         const isCorrect = key === currentWord[currentTyped.length];
 
         setKeystrokes((prev) => [
           ...prev,
-          {
-            timestampMs: elapsed,
-            isCorrect,
-            typedChar: key,
-          },
+          { timestampMs, isCorrect, typedChar: key },
         ]);
 
-        if (isCorrect) {
-          options?.onSuccess?.();
-        } else {
-          options?.onError?.();
-        }
+        if (isCorrect) options?.onSuccess?.();
+        else options?.onError?.();
 
         if (currentTyped.length >= currentWord.length + 10) return;
 
@@ -135,7 +78,6 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
           updated[activeWordIndex] = currentTyped + key;
           return updated;
         });
-
         return;
       }
 
@@ -155,184 +97,178 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
       }
     },
     [
-      isPaused,
-      mode,
-      timeLeft,
+      isRunning,
+      isCompleted,
+      startTimer,
+      elapsed,
       words,
       activeWordIndex,
       userInput,
-      startTime,
       options,
-      totalPausedDuration,
     ]
   );
 
-  const finishTest = useCallback(() => {
-    if (isCompleted || !startTime) return;
+  const reset = useCallback(
+    (newText: string) => {
+      const newWords = newText.split(' ');
+      resetTimer();
 
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
+      hasSavedRef.current = false;
+      isFinishingRef.current = false;
 
-    const elapsedSeconds = Math.floor(
-      (Date.now() - startTime - totalPausedDuration) / 1000
-    );
+      setActiveWordIndex(0);
+      setUserInput(newWords.map(() => ''));
+      setKeystrokes([]);
+      setIsCompleted(false);
+      setFinishedTime(null);
+    },
+    [resetTimer]
+  );
 
-    setFinishedTime(elapsedSeconds);
-    setIsCompleted(true);
-    setIsStarted(false);
-    options?.onFinished?.();
-  }, [isCompleted, startTime, totalPausedDuration, options]);
+  const totalTimeSpent = useMemo(() => {
+    return finishedTime !== null ? finishedTime : elapsed;
+  }, [finishedTime, elapsed]);
 
   const chartData = useMemo(() => {
-    if (!startTime) return [];
-
-    const elapsedSeconds =
-      finishedTime !== null
-        ? finishedTime
-        : Math.floor((Date.now() - startTime - totalPausedDuration) / 1000);
-
-    return buildChartData(keystrokes, elapsedSeconds);
-  }, [keystrokes, startTime, finishedTime, totalPausedDuration]);
+    return buildChartData(keystrokes, totalTimeSpent);
+  }, [keystrokes, totalTimeSpent]);
 
   const metrics = useMemo(() => {
     if (!chartData.length) return { wpm: 0, accuracy: 100 };
-
     const last = chartData[chartData.length - 1];
-
+    const totalTyped = keystrokes.filter(
+      (k) => k.typedChar !== 'Backspace'
+    ).length;
     const totalCorrect = keystrokes.filter(
       (k) => k.isCorrect && k.typedChar !== 'Backspace'
     ).length;
+
+    return {
+      wpm: last.wpm,
+      accuracy: totalTyped
+        ? Math.round((totalCorrect / totalTyped) * 100)
+        : 100,
+    };
+  }, [chartData, keystrokes]);
+
+  const start = useCallback(() => {
+    if (!hasStarted) {
+      setHasStarted(true);
+    }
+    startTimer();
+  }, [hasStarted, startTimer]);
+
+  const finishTest = useCallback(() => {
+    if (isFinishingRef.current) {
+      return;
+    }
+
+    if (isCompleted) return;
+    if (!hasStarted) return;
+    if (hasSavedRef.current) return;
+
+    isFinishingRef.current = true;
+    hasSavedRef.current = true;
+
+    pauseTimer();
+
+    const finalTime = mode === 'timed' ? initialTime - elapsed : elapsed;
+
+    setFinishedTime(finalTime);
+    setIsCompleted(true);
 
     const totalTyped = keystrokes.filter(
       (k) => k.typedChar !== 'Backspace'
     ).length;
 
-    const accuracy = totalTyped
-      ? Math.round((totalCorrect / totalTyped) * 100)
-      : 100;
-
-    return {
-      wpm: last.wpm,
-      accuracy,
-    };
-  }, [chartData, keystrokes]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        if (startTime && !isPaused && !isCompleted) {
-          setPausedTime(Date.now());
-          setIsPaused(true);
-
-          // Cancela o loop de animação
-          if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current);
-          }
-        }
-      } else {
-        if (isPaused && pausedTime) {
-          // Calcula quanto tempo ficou pausado
-          const pauseDuration = Date.now() - pausedTime;
-          setTotalPausedDuration((prev) => prev + pauseDuration);
-          setPausedTime(null);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [startTime, isPaused, isCompleted, pausedTime]);
-
-  const reset = useCallback(
-    (newText: string) => {
-      // Cancela o loop de animação
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-
-      setIsStarted(false);
-      setIsPaused(false);
-      setStartTime(null);
-      setActiveWordIndex(0);
-      setUserInput(newText.split(' ').map(() => ''));
-      setKeystrokes([]);
-      setTimeLeft(mode === 'timed' ? initialTime : 0);
-      setIsCompleted(false);
-      setFinishedTime(null);
-      setPausedTime(null);
-      setTotalPausedDuration(0);
-    },
-    [mode, initialTime]
-  );
-
-  const resume = useCallback(() => {
-    setIsPaused(false);
-    setPausedTime(null);
-  }, []);
-
-  const totalTime = useMemo(() => {
-    if (finishedTime !== null) return finishedTime;
-
-    if (mode === 'timed') {
-      return initialTime - timeLeft;
+    if (totalTyped === 0) {
+      isFinishingRef.current = false;
+      return;
     }
 
-    return timeLeft;
-  }, [finishedTime, mode, timeLeft, initialTime]);
+    const totalCorrect = keystrokes.filter(
+      (k) => k.isCorrect && k.typedChar !== 'Backspace'
+    ).length;
+
+    const accuracy = Math.round((totalCorrect / totalTyped) * 100);
+    const wpm = metrics.wpm;
+
+    options?.onFinished?.({
+      wpm,
+      accuracy,
+      time: finalTime,
+    });
+  }, [
+    isCompleted,
+    hasStarted,
+    pauseTimer,
+    elapsed,
+    keystrokes,
+    metrics,
+    options,
+  ]);
 
   useEffect(() => {
-    if (isCompleted) return;
+    if (isCompleted || !hasStarted) return;
 
-    const isLastWord = activeWordIndex === words.length - 1;
-    const currentWord = words[activeWordIndex];
-    const currentTyped = userInput[activeWordIndex];
+    let shouldFinish = false;
 
-    const finishedAllWords = isLastWord && currentTyped === currentWord;
+    const isLastWordCompleted =
+      activeWordIndex === words.length - 1 &&
+      userInput[activeWordIndex] === words[activeWordIndex];
 
-    if (finishedAllWords) {
+    const isTimeUp = mode === 'timed' && elapsed <= 0 && isRunning;
+
+    shouldFinish = isLastWordCompleted || isTimeUp;
+
+    if (shouldFinish && !isFinishingRef.current) {
       finishTest();
     }
-  }, [userInput, activeWordIndex, words, isCompleted, finishTest]);
+  }, [
+    activeWordIndex,
+    userInput,
+    words,
+    mode,
+    elapsed,
+    isRunning,
+    isCompleted,
+    hasStarted,
+    finishTest,
+  ]);
 
   const getRoundStats = useCallback((): Omit<
     RoundStats,
     'id' | 'timestamp'
   > | null => {
     if (!finishedTime || !metrics.wpm) return null;
-
     return {
       mode,
-      difficulty: difficulty,
+      difficulty,
       wpm: metrics.wpm,
       accuracy: metrics.accuracy,
       time: finishedTime,
     };
-  }, [finishedTime, metrics, keystrokes, mode, text, words]);
+  }, [finishedTime, metrics, mode, difficulty]);
 
   return {
-    isStarted,
-    isPaused,
+    isStarted: hasStarted,
+    isPaused: hasStarted && !isRunning && !isCompleted,
     activeWordIndex,
     userInput,
     words,
     mode,
     keystrokes,
-    totalTime,
+    totalTime: totalTimeSpent,
     isCompleted,
     finishedTime,
     getRoundStats,
-    setIsCompleted,
     start,
     handleKeyDown,
     reset,
-    resume,
-    setIsPaused,
+    resume: resumeTimer,
+    pause: pauseTimer,
     metrics,
-    timeLeft,
+    timeLeft: elapsed,
     chartData,
   };
 };

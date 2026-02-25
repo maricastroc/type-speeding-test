@@ -16,9 +16,25 @@ export class StatsService {
 
     try {
       const existing = this.getStoredRounds();
+
+      const isDuplicate = existing.some((round) => {
+        const timeDiff = Math.abs(round.timestamp - newRound.timestamp);
+        return (
+          timeDiff < 3000 &&
+          round.wpm === newRound.wpm &&
+          round.accuracy === newRound.accuracy &&
+          round.time === newRound.time &&
+          round.mode === newRound.mode &&
+          round.difficulty === newRound.difficulty
+        );
+      });
+
+      if (isDuplicate) {
+        return existing[0];
+      }
+
       const updated = [newRound, ...existing].slice(0, MAX_STORED_ROUNDS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      console.log('ok');
     } catch (error) {
       console.error('Error saving statistics:', error);
       this.cleanupOldRounds();

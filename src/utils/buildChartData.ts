@@ -36,16 +36,6 @@ export const buildChartData = (
 
     const minutes = s / 60;
 
-    if (s === 1) {
-      console.log('Segundo 1:', {
-        cumulativeCorrect,
-        cumulativeTotal,
-        minutes,
-        charsPer5: cumulativeCorrect / 5,
-        wpmCalc: cumulativeCorrect / 5 / minutes,
-      });
-    }
-
     let wpm = 0;
     let raw = 0;
 
