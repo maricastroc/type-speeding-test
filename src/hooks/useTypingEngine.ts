@@ -28,6 +28,8 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
 
   const [isCompleted, setIsCompleted] = useState(false);
 
+  const [isReady, setIsReady] = useState(false);
+
   const [finishedTime, setFinishedTime] = useState<number | null>(null);
 
   const [hasStarted, setHasStarted] = useState(false);
@@ -49,6 +51,8 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
   const handleKeyDown = useCallback(
     (key: string) => {
       if (isCompleted) return;
+
+      if (!isReady) return;
 
       if (!isRunning && !isCompleted && key !== 'Escape') {
         setHasStarted(true);
@@ -98,6 +102,7 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     },
     [
       isRunning,
+      isReady,
       isCompleted,
       startTimer,
       elapsed,
@@ -108,6 +113,11 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     ]
   );
 
+  const prepare = useCallback(() => {
+    setIsReady(true);
+    setHasStarted(false);
+  }, []);
+
   const reset = useCallback(
     (newText: string) => {
       const newWords = newText.split(' ');
@@ -116,6 +126,7 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
       hasSavedRef.current = false;
       isFinishingRef.current = false;
 
+      setIsReady(false);
       setActiveWordIndex(0);
       setUserInput(newWords.map(() => ''));
       setKeystrokes([]);
@@ -261,6 +272,8 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     totalTime: totalTimeSpent,
     isCompleted,
     finishedTime,
+    isReady,
+    prepare,
     getRoundStats,
     start,
     handleKeyDown,

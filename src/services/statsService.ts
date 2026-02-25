@@ -1,4 +1,3 @@
-// services/statsService.ts
 import { RoundStats } from '@/types/roundStats';
 
 const STORAGE_KEY = '@typing-stats';
@@ -35,6 +34,12 @@ export class StatsService {
 
       const updated = [newRound, ...existing].slice(0, MAX_STORED_ROUNDS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+      window.dispatchEvent(
+        new CustomEvent('statsUpdated', {
+          detail: { newRound, allRounds: updated },
+        })
+      );
     } catch (error) {
       console.error('Error saving statistics:', error);
       this.cleanupOldRounds();

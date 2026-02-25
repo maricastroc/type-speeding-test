@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBell, faGear } from '@fortawesome/free-solid-svg-icons';
+import { usePersonalBest } from '@/hooks/usePersonalBest';
 
 type HeaderProps = {
   onOpenSettings: (value: boolean) => void;
@@ -13,6 +14,8 @@ export const Header = ({
   onOpenSettings,
   onOpenHistorySection,
 }: HeaderProps) => {
+  const personalBest = usePersonalBest();
+
   return (
     <>
       <div className="flex justify-between w-full">
@@ -46,7 +49,7 @@ export const Header = ({
               Personal Best:
             </p>
             <span className="font-mono text-preset-4 text-neutral-0 font-extrabold">
-              0 WPM
+              {personalBest} WPM
             </span>
           </div>
 

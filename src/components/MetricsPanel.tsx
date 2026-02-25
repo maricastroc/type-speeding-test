@@ -18,6 +18,7 @@ export const MetricsPanel = ({
   isStarted,
   timeLeft,
 }: MetricsPanelProps) => {
+  console.log(isStarted);
   const accuracyColor = !isStarted
     ? 'text-neutral-0'
     : accuracy === 100

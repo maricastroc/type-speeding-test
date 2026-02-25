@@ -16,20 +16,20 @@ export const CustomTooltip = ({ active, payload }: any) => {
       : 0;
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 shadow-xl space-y-1 min-w-35">
-      <p className="text-xs text-zinc-500">second {point.second}</p>
+    <div className="bg-neutral-800 rounded-xl px-4 py-3 shadow-xl space-y-1 min-w-35">
+      <p className="text-xs text-neutral-500">second {point.second}</p>
 
-      <div className="flex justify-between text-sm">
+      <div className="flex justify-between text-sm gap-1">
         <span className="text-green-500">WPM</span>
         <span className="text-green-500 font-semibold">{safeWPM}</span>
       </div>
 
-      <div className="flex justify-between text-sm">
+      <div className="flex justify-between text-sm gap-1">
         <span className="text-blue-400">Accuracy</span>
         <span className="text-blue-400 font-semibold">{safeAccuracy}%</span>
       </div>
 
-      <div className="flex justify-between text-sm">
+      <div className="flex justify-between text-sm gap-1">
         <span className="text-red-500">Errors</span>
         <span className="text-red-500 font-semibold">{safeErrorCount}</span>
       </div>

@@ -64,7 +64,8 @@ export default function Home() {
     keystrokes,
     totalTime,
     finishedTime,
-    start,
+    isReady,
+    prepare,
     resume,
     handleKeyDown,
     reset,
@@ -83,8 +84,9 @@ export default function Home() {
     },
   });
 
-  const handleStart = () => {
-    start();
+  const handlePrepare = () => {
+    if (isReady) return;
+    prepare();
     inputRef.current?.focus();
   };
 
@@ -100,7 +102,7 @@ export default function Home() {
   );
 
   useEffect(() => {
-    if (!isStarted) return;
+    if (!isReady) return;
     const currentWordEl = wordsRef.current[activeWordIndex];
     if (currentWordEl) {
       currentWordEl.scrollIntoView({
@@ -131,6 +133,12 @@ export default function Home() {
       }
     }
   }, [isSettingsOpen, isStarted, isCompleted, pause, resume]);
+
+  useEffect(() => {
+    if (isReady && !isStarted) {
+      inputRef.current?.focus();
+    }
+  }, [isReady, isStarted]);
 
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
@@ -170,8 +178,12 @@ export default function Home() {
       <div className="mt-16 relative mx-auto text-left">
         {!isCompleted && (
           <div
-            className={`max-h-40 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${!isStarted || isPaused ? 'blur-xs opacity-70' : ''}`}
-            onClick={handleStart}
+            onClick={() => {
+              if (isReady) {
+                inputRef.current?.focus();
+              }
+            }}
+            className={`max-h-40 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${!isReady || isPaused ? 'blur-xs opacity-70' : ''}`}
           >
             {words.map((word, wordIdx) => (
               <div
@@ -208,15 +220,18 @@ export default function Home() {
           />
         )}
 
-        {!isStarted && !isCompleted && !isPaused && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 rounded-lg">
+        {!isReady && !isCompleted && !isPaused && (
+          <div
+            onClick={handlePrepare}
+            className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 rounded-lg"
+          >
             <button
-              onClick={handleStart}
+              onClick={handlePrepare}
               className="cursor-pointer py-4 px-8 rounded-xl bg-blue-500 text-white text-preset-4-semibold hover:brightness-110 transition"
             >
               Start Typing Test
             </button>
-            <p className="mt-4 text-neutral-300">
+            <p className="text-preset-5-semibold mt-4 text-neutral-300">
               Or click the text and start typing
             </p>
           </div>
