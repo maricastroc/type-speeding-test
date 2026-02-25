@@ -1,33 +1,30 @@
 'use client';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+
+import { useSound } from '@/contexts/SoundContext';
+import { useConfig } from '@/contexts/ConfigContext';
+import { useTypingEngine } from '@/hooks/useTypingEngine';
+import useRequest from '@/hooks/useRequest';
+import { useRoundStats } from '@/hooks/useRoundStats';
+import { calculateGeneralStats } from '@/utils/calculateStats';
+import { TextResponse } from '@/types/textResponse';
+
 import { Header } from '@/components/Header';
 import { SettingsPanel } from '@/components/SettingsPanel';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { texts } from '@/data/texts';
-import { useTypingEngine } from '@/hooks/useTypingEngine';
-import * as Dialog from '@radix-ui/react-dialog';
-import {
-  faAngleRight,
-  faArrowRotateRight,
-  faArrowsRotate,
-} from '@fortawesome/free-solid-svg-icons';
-import { useSound } from '@/contexts/SoundContext';
+import { ActionButtons } from '@/components/ActionButtons';
 import { WordDisplay } from '@/components/WordDisplay';
 import { TagsContainer } from '@/components/TagsContainer';
 import { PauseWarning } from '@/components/PauseWarning';
 import { MetricsPanel } from '@/components/MetricsPanel';
-import useRequest from '@/hooks/useRequest';
-import { useConfig } from '@/contexts/ConfigContext';
-import { calculateGeneralStats } from '@/utils/calculateStats';
 import { ResultSection } from '@/components/ResultSection';
 import { HistorySection } from '@/components/HistorySection';
-import { useRoundStats } from '@/hooks/useRoundStats';
 
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
 
-  const { category, difficulty } = useConfig();
+  const { setCategory, category, difficulty } = useConfig();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -35,11 +32,17 @@ export default function Home() {
 
   const [currentText, setCurrentText] = useState('');
 
+  const [isRandomizing, setIsRandomizing] = useState(false);
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { saveRound } = useRoundStats();
 
-  const { data, mutate } = useRequest<{ content: string }>({
+  const {
+    data,
+    mutate: mutateCurrent,
+    isValidating: isValidatingCurrent,
+  } = useRequest<TextResponse>({
     url: '/texts/random',
     method: 'GET',
     params: {
@@ -47,6 +50,59 @@ export default function Home() {
       difficulty,
     },
   });
+
+  const { mutate: mutateRandom } = useRequest<TextResponse>(
+    {
+      url: '/texts/random',
+      method: 'GET',
+      params: {
+        category: 'any',
+        difficulty,
+      },
+    },
+    {
+      revalidateOnMount: false,
+      revalidateOnFocus: false,
+    }
+  );
+
+  const onRandomize = async () => {
+    if (isRandomizing) return;
+
+    setIsRandomizing(true);
+
+    try {
+      const result = await mutateRandom();
+
+      if (result?.data) {
+        const { content, category: newCategory } = result.data;
+
+        setCategory(newCategory);
+
+        setCurrentText(content);
+        reset(content);
+      }
+    } finally {
+      setIsRandomizing(false);
+    }
+  };
+
+  const onNextText = async () => {
+    const result = await mutateCurrent();
+
+    if (result?.data) {
+      setCurrentText(result.data.content);
+      reset(result.data.content);
+    }
+  };
+
+  const isLoading = isRandomizing || isValidatingCurrent;
+
+  const loadingButton = isRandomizing
+    ? 'randomize'
+    : isValidatingCurrent
+      ? 'next'
+      : null;
 
   const wordsRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -90,16 +146,18 @@ export default function Home() {
     inputRef.current?.focus();
   };
 
-  const onRegenerate = () => {
-    const newText = texts[Math.floor(Math.random() * texts.length)];
-    setCurrentText(newText);
-    reset(newText);
-  };
-
   const generalStats = useMemo(
     () => calculateGeneralStats(keystrokes, chartData, totalTime),
     [keystrokes, chartData, totalTime]
   );
+
+  const onRestart = () => {
+    reset(currentText);
+
+    if (isReady) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  };
 
   useEffect(() => {
     if (!isReady) return;
@@ -142,23 +200,15 @@ export default function Home() {
   }, [isReady, isStarted]);
 
   useEffect(() => {
-    mutate();
-  }, [category, difficulty, mutate]);
-
-  useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Página ficou oculta - pausa o cronômetro
-        console.log('📱 Página oculta, pausando cronômetro');
         if (isStarted && !isCompleted && !isPaused) {
-          pause(); // Isso pausa o timer no useTypingEngine
+          pause();
         }
       }
     };
 
-    // Também pausa quando a janela perde foco (Alt+Tab, clicar em outra janela)
     const handleBlur = () => {
-      console.log('📱 Janela perdeu foco, pausando cronômetro');
       if (isStarted && !isCompleted && !isPaused) {
         pause();
       }
@@ -171,7 +221,7 @@ export default function Home() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
     };
-  }, [isStarted, isCompleted, isPaused, pause]); // Dependências importantes!
+  }, [isStarted, isCompleted, isPaused, pause]);
 
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
@@ -274,21 +324,13 @@ export default function Home() {
 
       <TagsContainer />
 
-      <div className="flex items-center justify-center gap-12 mt-20">
-        <FontAwesomeIcon
-          onClick={onRegenerate}
-          className="text-neutral-400 text-lg cursor-pointer hover:text-white transition"
-          icon={faArrowsRotate}
-        />
-        <FontAwesomeIcon
-          className="text-neutral-400 text-lg cursor-pointer hover:text-white transition"
-          icon={faArrowRotateRight}
-        />
-        <FontAwesomeIcon
-          className="text-neutral-400 text-lg cursor-pointer hover:text-white transition"
-          icon={faAngleRight}
-        />
-      </div>
+      <ActionButtons
+        onRandomize={onRandomize}
+        onRestart={onRestart}
+        onNext={onNextText}
+        isLoading={isLoading}
+        loadingButton={loadingButton}
+      />
 
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50">

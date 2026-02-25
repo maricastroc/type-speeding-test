@@ -3,6 +3,7 @@ import { capitalize } from '@/utils/capitalizeText';
 
 export const TagsContainer = () => {
   const { difficulty, category, mode } = useConfig();
+
   return (
     <div className="flex items-center mt-18 justify-center gap-3">
       <span className="px-4 bg-neutral-800 text-preset-7 text-neutral-400 p-1 rounded-md">

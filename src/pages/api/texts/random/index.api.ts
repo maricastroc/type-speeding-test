@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from '@/lib/prisma';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
 
 const querySchema = z.object({
-  category: z.enum(['general', 'lyrics', 'quotes', 'code']),
+  category: z.enum(['general', 'lyrics', 'quotes', 'code', 'any']),
   difficulty: z.enum(['easy', 'medium', 'hard']),
 });
 
@@ -18,12 +19,15 @@ export default async function handler(
   try {
     const { category, difficulty } = querySchema.parse(req.query);
 
-    const count = await prisma.text.count({
-      where: {
-        category,
-        difficulty,
-      },
-    });
+    const where: any = {
+      difficulty,
+    };
+
+    if (category !== 'any') {
+      where.category = category;
+    }
+
+    const count = await prisma.text.count({ where });
 
     if (count === 0) {
       return res
@@ -34,14 +38,14 @@ export default async function handler(
     const skip = Math.floor(Math.random() * count);
 
     const text = await prisma.text.findFirst({
-      where: {
-        category,
-        difficulty,
-      },
+      where,
       skip,
     });
 
-    return res.status(200).json(text);
+    return res.status(200).json({
+      content: text?.content,
+      category: text?.category,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: 'Invalid filters provided.' });
