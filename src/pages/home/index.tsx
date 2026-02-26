@@ -25,15 +25,13 @@ import { HistorySection } from '@/components/HistorySection';
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
 
-  const { category, difficulty } = useConfig();
+  const { category, setCategory, difficulty } = useConfig();
 
   const { saveRound } = useRoundStats();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [showHistorySection, setShowHistorySection] = useState(false);
-
-  const [textCategory, setTextCategory] = useState<string | null>(null);
 
   const [currentText, setCurrentText] = useState('');
 
@@ -60,15 +58,6 @@ export default function Home() {
     }
   );
 
-  useEffect(() => {
-    if (!data?.content) return;
-
-    if (data.category === category) {
-      setCurrentText(data.content);
-      setTextCategory(data.category);
-    }
-  }, [data, category]);
-
   const onRandomize = async () => {
     const result = await mutate(
       api.get<TextResponse>('/texts/random', {
@@ -79,7 +68,7 @@ export default function Home() {
 
     if (result?.data) {
       setCurrentText(result.data.content);
-      setTextCategory(result.data.category);
+      setCategory(result.data.category);
       reset(result.data.content);
       prepare();
     }
@@ -143,13 +132,22 @@ export default function Home() {
   );
 
   useEffect(() => {
+    if (!data?.content) return;
+
+    if (data.category === category) {
+      setCurrentText(data.content);
+      setCategory(data.category);
+    }
+  }, [data, category]);
+
+  useEffect(() => {
     if (!isReady) return;
 
     const currentWordEl = wordsRef.current[activeWordIndex];
 
     currentWordEl?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }, [activeWordIndex, isStarted, isReady]);
-  console.log(category, textCategory, data);
+
   useEffect(() => {
     if (isSettingsOpen) {
       pause();
@@ -228,7 +226,7 @@ export default function Home() {
         {!isCompleted && (
           <div
             onClick={() => isReady && inputRef.current?.focus()}
-            className={`max-h-40 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${
+            className={`max-h-42 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${
               !isReady || isPaused || isLoading ? 'blur-xs opacity-70' : ''
             }`}
           >
@@ -286,7 +284,7 @@ export default function Home() {
         )}
       </div>
 
-      <TagsContainer textCategory={textCategory} />
+      <TagsContainer textCategory={category} />
 
       <ActionButtons
         onRandomize={onRandomize}
