@@ -32,8 +32,6 @@ export default function Home() {
 
   const [currentText, setCurrentText] = useState('');
 
-  const [isRandomizing, setIsRandomizing] = useState(false);
-
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { saveRound } = useRoundStats();
@@ -59,40 +57,34 @@ export default function Home() {
     }
   );
 
-  const { mutate: mutateRandom } = useRequest<TextResponse>(
-    {
-      url: '/texts/random',
-      method: 'GET',
-      params: {
-        category: 'any',
-        difficulty,
+  const { mutate: mutateRandom, isValidating: isRandomizing } =
+    useRequest<TextResponse>(
+      {
+        url: '/texts/random',
+        method: 'GET',
+        params: {
+          category: 'any',
+          difficulty,
+        },
       },
-    },
-    {
-      revalidateOnMount: false,
-      revalidateIfStale: false,
-      revalidateOnReconnect: false,
-    }
-  );
+      {
+        revalidateOnMount: false,
+        revalidateIfStale: false,
+        revalidateOnReconnect: false,
+      }
+    );
 
   const onRandomize = async () => {
-    if (isRandomizing) return;
-    setIsRandomizing(true);
+    const result = await mutateRandom();
 
-    try {
-      const result = await mutateRandom();
+    if (result?.data) {
+      const { content, category: newCategory } = result.data;
 
-      if (result?.data) {
-        const { content, category: newCategory } = result.data;
+      setCategory(newCategory);
 
-        setCategory(newCategory);
-
-        setCurrentText(content);
-        reset(content);
-        prepare();
-      }
-    } finally {
-      setIsRandomizing(false);
+      setCurrentText(content);
+      reset(content);
+      prepare();
     }
   };
 
