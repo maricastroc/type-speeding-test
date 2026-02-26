@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CloseButton } from './CloseButton';
 import { SettingsRow } from './SettingsRow';
 import { useSound } from '@/contexts/SoundContext';
@@ -81,7 +80,6 @@ export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
           </div>
 
           <div className="flex flex-col gap-6 pl-0 lg:pl-8">
-            {/* SOUND */}
             <SettingsRow
               label="Sound"
               type="dropdown"
@@ -100,7 +98,6 @@ export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
               ]}
             />
 
-            {/* CARET */}
             <SettingsRow
               label="Caret"
               type="radio"
