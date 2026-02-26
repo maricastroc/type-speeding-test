@@ -36,22 +36,28 @@ export default function Home() {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const skipNextFetch = useRef(false);
-
   const { saveRound } = useRoundStats();
 
   const {
     data,
     mutate: mutateCurrent,
     isValidating: isValidatingCurrent,
-  } = useRequest<TextResponse>({
-    url: '/texts/random',
-    method: 'GET',
-    params: {
-      category,
-      difficulty,
+  } = useRequest<TextResponse>(
+    {
+      url: '/texts/random',
+      method: 'GET',
+      params: {
+        category,
+        difficulty,
+      },
     },
-  });
+    {
+      revalidateOnMount: true,
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
 
   const { mutate: mutateRandom } = useRequest<TextResponse>(
     {
@@ -64,7 +70,8 @@ export default function Home() {
     },
     {
       revalidateOnMount: false,
-      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      revalidateOnReconnect: false,
     }
   );
 
@@ -78,7 +85,6 @@ export default function Home() {
       if (result?.data) {
         const { content, category: newCategory } = result.data;
 
-        skipNextFetch.current = true;
         setCategory(newCategory);
 
         setCurrentText(content);
@@ -176,11 +182,9 @@ export default function Home() {
   }, [activeWordIndex, isStarted]);
 
   useEffect(() => {
-    if (data && !skipNextFetch.current) {
+    if (data) {
       setCurrentText(data.content);
     }
-
-    skipNextFetch.current = false;
   }, [data]);
 
   useEffect(() => {
