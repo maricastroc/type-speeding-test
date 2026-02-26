@@ -224,7 +224,7 @@ export default function Home() {
         />
       )}
 
-      <div className="mt-16 relative mx-auto text-left">
+      <div className="mt-10 relative mx-auto text-left">
         {!isCompleted && (
           <div
             onClick={() => isReady && inputRef.current?.focus()}
