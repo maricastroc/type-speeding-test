@@ -10,6 +10,7 @@ import useRequest from '@/hooks/useRequest';
 import { useRoundStats } from '@/hooks/useRoundStats';
 import { calculateGeneralStats } from '@/utils/calculateStats';
 import { TextResponse } from '@/types/textResponse';
+import { api } from '@/lib/axios';
 
 import { Header } from '@/components/Header';
 import { SettingsPanel } from '@/components/SettingsPanel';
@@ -24,31 +25,33 @@ import { HistorySection } from '@/components/HistorySection';
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
 
-  const { setCategory, category, difficulty } = useConfig();
+  const { category, difficulty } = useConfig();
+
+  const { saveRound } = useRoundStats();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [showHistorySection, setShowHistorySection] = useState(false);
 
+  const [textCategory, setTextCategory] = useState<string | null>(null);
+
   const [currentText, setCurrentText] = useState('');
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { saveRound } = useRoundStats();
+  const wordsRef = useRef<(HTMLDivElement | null)[]>([]);
 
-  const {
-    data,
-    mutate: mutateCurrent,
-    isValidating: isValidatingCurrent,
-  } = useRequest<TextResponse>(
-    {
+  const requestConfig = useMemo(
+    () => ({
       url: '/texts/random',
       method: 'GET',
-      params: {
-        category,
-        difficulty,
-      },
-    },
+      params: { category, difficulty },
+    }),
+    [category, difficulty]
+  );
+
+  const { data, mutate, isValidating } = useRequest<TextResponse>(
+    requestConfig,
     {
       revalidateOnMount: true,
       revalidateIfStale: false,
@@ -57,56 +60,40 @@ export default function Home() {
     }
   );
 
-  const { mutate: mutateRandom, isValidating: isRandomizing } =
-    useRequest<TextResponse>(
-      {
-        url: '/texts/random',
-        method: 'GET',
-        params: {
-          category: 'any',
-          difficulty,
-        },
-      },
-      {
-        revalidateOnMount: false,
-        revalidateIfStale: false,
-        revalidateOnReconnect: false,
-      }
-    );
+  useEffect(() => {
+    if (!data?.content) return;
+
+    if (data.category === category) {
+      setCurrentText(data.content);
+      setTextCategory(data.category);
+    }
+  }, [data, category]);
 
   const onRandomize = async () => {
-    const result = await mutateRandom();
-
-    if (result?.data) {
-      const { content, category: newCategory } = result.data;
-
-      setCategory(newCategory);
-
-      setCurrentText(content);
-      reset(content);
-      prepare();
-    }
-  };
-
-  const onNextText = async () => {
-    const result = await mutateCurrent();
+    const result = await mutate(
+      api.get<TextResponse>('/texts/random', {
+        params: { category: 'any', difficulty },
+      }),
+      { revalidate: false }
+    );
 
     if (result?.data) {
       setCurrentText(result.data.content);
+      setTextCategory(result.data.category);
       reset(result.data.content);
       prepare();
     }
   };
 
-  const isLoading = isRandomizing || isValidatingCurrent;
+  const onNextText = async () => {
+    const result = await mutate(undefined, { revalidate: true });
 
-  const loadingButton = isRandomizing
-    ? 'randomize'
-    : isValidatingCurrent
-      ? 'next'
-      : null;
-
-  const wordsRef = useRef<(HTMLDivElement | null)[]>([]);
+    if (result?.data?.content) {
+      setCurrentText(result.data.content);
+      reset(result.data.content);
+      prepare();
+    }
+  };
 
   const {
     isStarted,
@@ -129,16 +116,11 @@ export default function Home() {
     reset,
     pause,
   } = useTypingEngine(currentText, {
-    onError: () => {
-      playErrorSound();
-    },
-    onSuccess: () => playKeystroke(),
+    onError: playErrorSound,
+    onSuccess: playKeystroke,
     onFinished: (stats) => {
       inputRef.current?.blur();
-
-      if (!stats) return;
-
-      saveRound(stats);
+      if (stats) saveRound(stats);
     },
   });
 
@@ -148,44 +130,31 @@ export default function Home() {
     inputRef.current?.focus();
   };
 
-  const generalStats = useMemo(
-    () => calculateGeneralStats(keystrokes, chartData, totalTime),
-    [keystrokes, chartData, totalTime]
-  );
-
   const onRestart = () => {
     reset(currentText);
-
     if (isReady) {
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
+  const generalStats = useMemo(
+    () => calculateGeneralStats(keystrokes, chartData, totalTime),
+    [keystrokes, chartData, totalTime]
+  );
+
   useEffect(() => {
     if (!isReady) return;
 
     const currentWordEl = wordsRef.current[activeWordIndex];
-    if (currentWordEl) {
-      currentWordEl.scrollIntoView({
-        block: 'center',
-        behavior: 'smooth',
-      });
-    }
-  }, [activeWordIndex, isStarted]);
 
-  useEffect(() => {
-    if (data) {
-      setCurrentText(data.content);
-    }
-  }, [data]);
-
+    currentWordEl?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [activeWordIndex, isStarted, isReady]);
+  console.log(category, textCategory, data);
   useEffect(() => {
     if (isSettingsOpen) {
       pause();
-    } else {
-      if (isStarted && !isCompleted) {
-        resume();
-      }
+    } else if (isStarted && !isCompleted) {
+      resume();
     }
   }, [isSettingsOpen, isStarted, isCompleted, pause, resume]);
 
@@ -197,10 +166,8 @@ export default function Home() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (isStarted && !isCompleted && !isPaused) {
-          pause();
-        }
+      if (document.hidden && isStarted && !isCompleted && !isPaused) {
+        pause();
       }
     };
 
@@ -219,6 +186,9 @@ export default function Home() {
     };
   }, [isStarted, isCompleted, isPaused, pause]);
 
+  const isLoading = isValidating;
+  const loadingButton = isLoading ? 'randomize' : null;
+
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
       <Header
@@ -232,7 +202,7 @@ export default function Home() {
       >
         <HistorySection
           open={showHistorySection}
-          onOpenChange={(value) => setShowHistorySection(value)}
+          onOpenChange={setShowHistorySection}
         />
       </Dialog.Root>
 
@@ -257,12 +227,10 @@ export default function Home() {
       <div className="mt-16 relative mx-auto text-left">
         {!isCompleted && (
           <div
-            onClick={() => {
-              if (isReady) {
-                inputRef.current?.focus();
-              }
-            }}
-            className={`max-h-40 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${!isReady || isPaused ? 'blur-xs opacity-70' : ''}`}
+            onClick={() => isReady && inputRef.current?.focus()}
+            className={`max-h-40 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${
+              !isReady || isPaused || isLoading ? 'blur-xs opacity-70' : ''
+            }`}
           >
             {words.map((word, wordIdx) => (
               <div
@@ -318,7 +286,7 @@ export default function Home() {
         )}
       </div>
 
-      <TagsContainer />
+      <TagsContainer textCategory={textCategory} />
 
       <ActionButtons
         onRandomize={onRandomize}

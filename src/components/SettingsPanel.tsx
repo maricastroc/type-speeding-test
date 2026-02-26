@@ -1,99 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useConfig } from '@/contexts/ConfigContext';
 import { CloseButton } from './CloseButton';
 import { SettingsRow } from './SettingsRow';
 import { useSound } from '@/contexts/SoundContext';
+import { useConfig } from '@/contexts/ConfigContext';
 
 type SettingsPanelProps = {
   setIsOpen: (value: boolean) => void;
-};
-
-type RadioOption = {
-  label: string;
-  selected?: boolean;
-};
-
-type DropdownOption = {
-  label: string;
-  value: string;
-  selected?: boolean;
-};
-
-type SettingConfig =
-  | {
-      label: string;
-      type: 'radio';
-      options: RadioOption[];
-      wrap?: boolean;
-    }
-  | {
-      label: string;
-      type: 'dropdown';
-      options: DropdownOption[];
-    };
-
-const SETTINGS_CONFIG: {
-  left: SettingConfig[];
-  right: SettingConfig[];
-} = {
-  left: [
-    {
-      label: 'Mode',
-      type: 'radio',
-      options: [{ label: 'Timed (60s)', selected: true }, { label: 'Passage' }],
-    },
-    {
-      label: 'Difficulty',
-      type: 'radio',
-      options: [
-        { label: 'Easy' },
-        { label: 'Medium' },
-        { label: 'Hard', selected: true },
-      ],
-    },
-    {
-      label: 'Category',
-      type: 'radio',
-      wrap: true,
-      options: [
-        { label: 'General', selected: true },
-        { label: 'Lyrics' },
-        { label: 'Quotes' },
-        { label: 'Code' },
-      ],
-    },
-  ],
-  right: [
-    {
-      label: 'Sound',
-      type: 'dropdown',
-      options: [
-        { label: 'Creamy', value: 'creamy', selected: true },
-        { label: 'Beep', value: 'beep' },
-        { label: 'Osu', value: 'osu' },
-        { label: 'Pop', value: 'pop' },
-        { label: 'Punch', value: 'punch' },
-        { label: 'Rubber Keys', value: 'rubber' },
-        { label: 'Typewriter', value: 'typewriter' },
-        { label: 'Click', value: 'click' },
-        { label: 'Hitmarker', value: 'hitmarker' },
-      ],
-    },
-    {
-      label: 'Caret',
-      type: 'radio',
-      options: [
-        { label: 'Pip', selected: true },
-        { label: 'Box' },
-        { label: 'Underline' },
-      ],
-    },
-    {
-      label: 'Theme',
-      type: 'radio',
-      options: [{ label: 'Dark', selected: true }, { label: 'Light' }],
-    },
-  ],
 };
 
 export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
@@ -101,50 +13,6 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
     useConfig();
 
   const { soundName, setSoundName } = useSound();
-
-  const getPropsForLabel = (label: string) => {
-    switch (label) {
-      case 'Mode':
-        return {
-          currentValue: mode,
-          onChange: (val: any) => setMode(val),
-          options: [
-            { label: 'Timed (60s)', value: 'timed' },
-            { label: 'Passage', value: 'passage' },
-          ],
-        };
-      case 'Category':
-        return {
-          currentValue: category,
-          onChange: (val: any) => setCategory(val),
-          options: [
-            { label: 'General', value: 'general' },
-            { label: 'Code', value: 'code' },
-            { label: 'Quotes', value: 'quotes' },
-            { label: 'Lyrics', value: 'lyrics' },
-          ],
-        };
-      case 'Difficulty':
-        return {
-          currentValue: difficulty,
-          onChange: (val: any) => setDifficulty(val),
-          options: [
-            { label: 'Easy', value: 'easy' },
-            { label: 'Medium', value: 'medium' },
-            { label: 'Hard', value: 'hard' },
-          ],
-        };
-      case 'Sound':
-        return {
-          currentValue: soundName,
-          onChange: (val: any) => setSoundName(val),
-          options: SETTINGS_CONFIG.right.find((s) => s.label === 'Sound')
-            ?.options as any,
-        };
-      default:
-        return { currentValue: '', onChange: () => {}, options: [] };
-    }
-  };
 
   return (
     <div
@@ -170,43 +38,87 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
 
         <div className="flex flex-col lg:grid lg:grid-cols-2 lg:divide-x lg:divide-neutral-700">
           <div className="flex flex-col gap-6 pr-0 lg:pr-8">
-            {SETTINGS_CONFIG.left.map((setting) => {
-              const dynamicProps = getPropsForLabel(setting.label);
-              return (
-                <SettingsRow
-                  key={setting.label}
-                  label={setting.label}
-                  type={setting.type as any}
-                  options={
-                    dynamicProps.options.length > 0
-                      ? dynamicProps.options
-                      : (setting.options as any)
-                  }
-                  currentValue={dynamicProps.currentValue}
-                  onChange={dynamicProps.onChange}
-                />
-              );
-            })}
+            <SettingsRow
+              label="Mode"
+              type="radio"
+              currentValue={mode}
+              onChange={setMode}
+              options={[
+                { label: 'Timed (60s)', value: 'timed' },
+                { label: 'Passage', value: 'passage' },
+              ]}
+            />
+
+            <SettingsRow
+              label="Difficulty"
+              type="radio"
+              currentValue={difficulty}
+              onChange={setDifficulty}
+              options={[
+                { label: 'Easy', value: 'easy' },
+                { label: 'Medium', value: 'medium' },
+                { label: 'Hard', value: 'hard' },
+              ]}
+            />
+
+            <SettingsRow
+              label="Category"
+              type="radio"
+              currentValue={category}
+              onChange={setCategory}
+              options={[
+                { label: 'General', value: 'general' },
+                { label: 'Lyrics', value: 'lyrics' },
+                { label: 'Quotes', value: 'quotes' },
+                { label: 'Code', value: 'code' },
+              ]}
+            />
           </div>
 
           <div className="flex flex-col gap-6 pl-0 lg:pl-8">
-            {SETTINGS_CONFIG.right.map((setting) => {
-              const dynamicProps = getPropsForLabel(setting.label);
-              return (
-                <SettingsRow
-                  key={setting.label}
-                  label={setting.label}
-                  type={setting.type as any}
-                  options={
-                    dynamicProps.options.length > 0
-                      ? dynamicProps.options
-                      : (setting.options as any)
-                  }
-                  currentValue={dynamicProps.currentValue}
-                  onChange={dynamicProps.onChange}
-                />
-              );
-            })}
+            {/* SOUND */}
+            <SettingsRow
+              label="Sound"
+              type="dropdown"
+              currentValue={soundName}
+              onChange={setSoundName}
+              options={[
+                { label: 'Creamy', value: 'creamy' },
+                { label: 'Beep', value: 'beep' },
+                { label: 'Osu', value: 'osu' },
+                { label: 'Pop', value: 'pop' },
+                { label: 'Punch', value: 'punch' },
+                { label: 'Rubber Keys', value: 'rubber' },
+                { label: 'Typewriter', value: 'typewriter' },
+                { label: 'Click', value: 'click' },
+                { label: 'Hitmarker', value: 'hitmarker' },
+              ]}
+            />
+
+            {/* CARET */}
+            <SettingsRow
+              label="Caret"
+              type="radio"
+              currentValue="pip"
+              onChange={() => {}}
+              options={[
+                { label: 'Pip', value: 'pip' },
+                { label: 'Box', value: 'box' },
+                { label: 'Underline', value: 'underline' },
+              ]}
+            />
+
+            {/* THEME */}
+            <SettingsRow
+              label="Theme"
+              type="radio"
+              currentValue="dark"
+              onChange={() => {}}
+              options={[
+                { label: 'Dark', value: 'dark' },
+                { label: 'Light', value: 'light' },
+              ]}
+            />
           </div>
         </div>
 

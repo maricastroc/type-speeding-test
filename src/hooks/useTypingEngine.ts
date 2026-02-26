@@ -70,6 +70,10 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
       const currentWord = words[activeWordIndex];
       const currentTyped = userInput[activeWordIndex];
 
+      if (!currentWord || currentTyped === undefined) {
+        return;
+      }
+
       const timestampMs = elapsed * 1000;
 
       if (key.length === 1 && key !== ' ') {
@@ -164,7 +168,6 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
     const totalTyped = validKeystrokes.length;
     const totalCorrect = validKeystrokes.filter((k) => k.isCorrect).length;
 
-    // 👇 USA O elapsedSeconds CALCULADO
     const minutes = Math.max(0.01, elapsedSeconds / 60);
 
     const rawWpm = totalCorrect / 5 / minutes;
@@ -174,7 +177,7 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
       totalTyped > 0 ? Math.round((totalCorrect / totalTyped) * 100) : 100;
 
     return { wpm, accuracy };
-  }, [keystrokes, elapsedSeconds, hasStarted]); // 👈 Depende do elapsedSeconds
+  }, [keystrokes, elapsedSeconds, hasStarted]);
 
   const start = useCallback(() => {
     if (!hasStarted) {

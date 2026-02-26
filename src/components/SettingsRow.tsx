@@ -48,7 +48,7 @@ export const SettingsRow = ({
             key={option.value}
             onClick={() => onChange(option.value)}
             className={`
-              px-4 py-2 rounded-lg text-preset-5 transition
+              cursor-pointer px-4 py-2 rounded-lg text-preset-5 transition
               ${
                 currentValue === option.value
                   ? 'bg-blue-500 text-white'

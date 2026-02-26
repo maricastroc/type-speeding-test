@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { ResultChart } from './ResultChart';
 import { StatsDisplay } from './StatsDisplay';
 import { GeneralStats } from '@/types/generalStats';
-import { ChartPoint } from '@/types/ChartPoint';
+import { ChartPoint } from '@/types/chartPoint';
 import { ResumeSection } from './ResumeSection';
 import { useRoundStats } from '@/hooks/useRoundStats';
 import { useEffect, useRef } from 'react';

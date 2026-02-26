@@ -1,4 +1,4 @@
-import { ChartPoint } from '@/types/ChartPoint';
+import { ChartPoint } from '@/types/chartPoint';
 import { GeneralStats } from '@/types/generalStats';
 import { Keystroke } from '@/types/keyStore';
 
