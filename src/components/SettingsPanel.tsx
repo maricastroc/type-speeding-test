@@ -6,9 +6,10 @@ import { useConfig } from '@/contexts/ConfigContext';
 
 type SettingsPanelProps = {
   setIsOpen: (value: boolean) => void;
+  onPrepare: () => void;
 };
 
-export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
+export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
   const { mode, setMode, category, setCategory, difficulty, setDifficulty } =
     useConfig();
 
@@ -19,14 +20,15 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
       className="
         w-full
         shadow-2xl
-        p-8 xl:px-28
+        xl:px-28
         animate-slideUp
         bg-background
       "
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="mt-4 p-6 shadow-lg border-t border-neutral-700">
+      <div className="shadow-lg">
         <div className="flex flex-col w-full items-center justify-center">
+          <span className="w-full h-[0.05rem] bg-neutral-700 rounded-xl mb-6" />
           <span className="w-32 h-2 bg-neutral-400 rounded-xl mb-4" />
           <h2 className="text-preset-3-semibold text-neutral-0 mb-2">
             Settings
@@ -65,7 +67,10 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
               label="Category"
               type="radio"
               currentValue={category}
-              onChange={setCategory}
+              onChange={(value) => {
+                setCategory(value);
+                onPrepare();
+              }}
               options={[
                 { label: 'General', value: 'general' },
                 { label: 'Lyrics', value: 'lyrics' },
@@ -122,7 +127,7 @@ export const SettingsPanel = ({ setIsOpen }: SettingsPanelProps) => {
           </div>
         </div>
 
-        <CloseButton className="mt-12" onClick={() => setIsOpen(false)}>
+        <CloseButton className="mt-12 mb-4" onClick={() => setIsOpen(false)}>
           Close
         </CloseButton>
       </div>

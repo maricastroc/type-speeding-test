@@ -297,11 +297,14 @@ export default function Home() {
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50">
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+            className="absolute inset-0 "
             onClick={() => setIsSettingsOpen(false)}
           />
           <div className="absolute bottom-0 left-0 w-full">
-            <SettingsPanel setIsOpen={setIsSettingsOpen} />
+            <SettingsPanel
+              onPrepare={() => prepare()}
+              setIsOpen={setIsSettingsOpen}
+            />
           </div>
         </div>
       )}
