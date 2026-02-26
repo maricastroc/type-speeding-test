@@ -36,6 +36,8 @@ export default function Home() {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const skipNextFetch = useRef(false);
+
   const { saveRound } = useRoundStats();
 
   const {
@@ -68,7 +70,6 @@ export default function Home() {
 
   const onRandomize = async () => {
     if (isRandomizing) return;
-
     setIsRandomizing(true);
 
     try {
@@ -77,10 +78,12 @@ export default function Home() {
       if (result?.data) {
         const { content, category: newCategory } = result.data;
 
+        skipNextFetch.current = true;
         setCategory(newCategory);
 
         setCurrentText(content);
         reset(content);
+        prepare();
       }
     } finally {
       setIsRandomizing(false);
@@ -93,6 +96,7 @@ export default function Home() {
     if (result?.data) {
       setCurrentText(result.data.content);
       reset(result.data.content);
+      prepare();
     }
   };
 
@@ -172,16 +176,12 @@ export default function Home() {
   }, [activeWordIndex, isStarted]);
 
   useEffect(() => {
-    if (data) {
-      setCurrentText(data?.content);
+    if (data && !skipNextFetch.current) {
+      setCurrentText(data.content);
     }
-  }, [data]);
 
-  useEffect(() => {
-    if (data?.content) {
-      reset(data.content);
-    }
-  }, [category, difficulty, reset, data]);
+    skipNextFetch.current = false;
+  }, [data]);
 
   useEffect(() => {
     if (isSettingsOpen) {
