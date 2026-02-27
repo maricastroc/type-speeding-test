@@ -39,14 +39,17 @@ export default function Home() {
 
   const wordsRef = useRef<(HTMLDivElement | null)[]>([]);
 
-  const requestConfig = useMemo(
-    () => ({
+  const isRandomizingRef = useRef(false);
+
+  const requestConfig = useMemo(() => {
+    if (isRandomizingRef.current) return null;
+
+    return {
       url: '/texts/random',
       method: 'GET',
       params: { category, difficulty },
-    }),
-    [category, difficulty]
-  );
+    };
+  }, [category, difficulty]);
 
   const { data, mutate, isValidating } = useRequest<TextResponse>(
     requestConfig,
@@ -59,21 +62,21 @@ export default function Home() {
   );
 
   const onRandomize = async () => {
-    const result = await mutate(
-      api.get<TextResponse>('/texts/random', {
-        params: { category: 'any', difficulty },
-      }),
-      { revalidate: false }
-    );
+    isRandomizingRef.current = true;
 
-    if (result?.data) {
-      setCurrentText(result.data.content);
-      setCategory(result.data.category);
-      reset(result.data.content);
+    const response = await api.get<TextResponse>('/texts/random', {
+      params: { category: 'any', difficulty },
+    });
+
+    if (response.data) {
+      setCategory(response.data.category);
+      setCurrentText(response.data.content);
+      reset(response.data.content);
       prepare();
     }
-  };
 
+    isRandomizingRef.current = false;
+  };
   const onNextText = async () => {
     const result = await mutate(undefined, { revalidate: true });
 
@@ -134,11 +137,8 @@ export default function Home() {
   useEffect(() => {
     if (!data?.content) return;
 
-    if (data.category === category) {
-      setCurrentText(data.content);
-      setCategory(data.category);
-    }
-  }, [data, category]);
+    setCurrentText(data.content);
+  }, [data]);
 
   useEffect(() => {
     if (!isReady) return;
