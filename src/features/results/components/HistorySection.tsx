@@ -54,7 +54,7 @@ export function HistorySection({ open, onOpenChange }: Props) {
         <Dialog.Content
           className={`
             fixed top-0 right-0 h-full w-105
-            bg-neutral-900 border-l border-neutral-800
+            bg-neutral-900 border-l border-neutral-700
             p-8 shadow-2xl
             transition-transform duration-250 ease-out
             flex flex-col
@@ -81,7 +81,7 @@ export function HistorySection({ open, onOpenChange }: Props) {
         ${
           isBest
             ? 'border-yellow-500 shadow-[0_0_20px_rgba(250,204,21,0.35)]'
-            : 'border-neutral-800 hover:bg-neutral-800/30'
+            : 'border-neutral-500/40 hover:bg-neutral-800/30'
         }
       `}
                   >
@@ -96,7 +96,7 @@ export function HistorySection({ open, onOpenChange }: Props) {
                     )}
 
                     <div>
-                      <p className="text-white text-preset-3-semibold">
+                      <p className="text-neutral-0 text-preset-3-semibold">
                         {round.wpm}{' '}
                         <span className="text-preset-7 text-neutral-400 font-mono">
                           WPM
@@ -121,7 +121,7 @@ export function HistorySection({ open, onOpenChange }: Props) {
               })}
             </div>
 
-            <Dialog.Close className="cursor-pointer hover:brightness-75 transition-all duration-100 mt-6 flex items-center justify-center p-4 py-2 bg-red-500 rounded-xl text-neutral-0">
+            <Dialog.Close className="text-white cursor-pointer hover:brightness-110 transition-all duration-100 mt-6 flex items-center justify-center p-4 py-2 bg-red-500 rounded-xl">
               Close
             </Dialog.Close>
           </div>

@@ -27,30 +27,30 @@ export const ResultChart = ({ data }: { data: ChartPoint[] }) => {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <LineChart data={smoothed}>
-        <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+        <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
 
         <XAxis
           dataKey="second"
-          stroke="#717178"
+          stroke="var(--neutral-500)"
           axisLine={false}
           tickLine={false}
           label={{
             value: 'Seconds',
             offset: -5,
             position: 'insideBottom',
-            style: { fill: '#949497', fontSize: 11 },
+            style: { fill: 'var(--neutral-400)', fontSize: 11 },
           }}
         />
 
         <YAxis
-          stroke="#949497"
+          stroke="var(--neutral-500)"
           axisLine={false}
           tickLine={false}
           label={{
             value: 'Words per minute',
             angle: -90,
             position: 'insideLeft',
-            style: { fill: '#949497', fontSize: 11 },
+            style: { fill: 'var(--neutral-400)', fontSize: 11 },
           }}
         />
 

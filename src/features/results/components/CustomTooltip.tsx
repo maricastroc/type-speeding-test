@@ -16,7 +16,7 @@ export const CustomTooltip = ({ active, payload }: any) => {
       : 0;
 
   return (
-    <div className="bg-neutral-800 rounded-xl px-4 py-3 shadow-xl space-y-1 min-w-35">
+    <div className="bg-[#262626] rounded-xl px-4 py-3 shadow-xl space-y-1 min-w-35">
       <p className="text-xs text-neutral-500">second {point.second}</p>
 
       <div className="flex justify-between text-sm gap-1">
