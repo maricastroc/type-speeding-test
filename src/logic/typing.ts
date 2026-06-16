@@ -1,0 +1,41 @@
+import type { Keystroke } from '@/types/keyStore';
+
+export function canAdvanceWord(
+  typed: string,
+  activeWordIndex: number,
+  totalWords: number
+): boolean {
+  return typed.length > 0 && activeWordIndex < totalWords - 1;
+}
+
+export function isLastWordComplete(
+  activeWordIndex: number,
+  words: string[],
+  userInput: string[]
+): boolean {
+  return (
+    activeWordIndex === words.length - 1 &&
+    userInput[activeWordIndex] === words[activeWordIndex]
+  );
+}
+
+export function canTypeMoreChars(typed: string, word: string): boolean {
+  return typed.length < word.length + 10;
+}
+
+export function calculateMetrics(
+  keystrokes: Keystroke[],
+  elapsedSeconds: number
+): { wpm: number; accuracy: number } {
+  if (keystrokes.length === 0) return { wpm: 0, accuracy: 100 };
+
+  const valid = keystrokes.filter((k) => k.typedChar !== 'Backspace');
+  const totalTyped = valid.length;
+  const totalCorrect = valid.filter((k) => k.isCorrect).length;
+
+  const minutes = Math.max(0.01, elapsedSeconds / 60);
+  const wpm = Math.round(totalCorrect / 5 / minutes);
+  const accuracy = totalTyped > 0 ? Math.round((totalCorrect / totalTyped) * 100) : 100;
+
+  return { wpm, accuracy };
+}

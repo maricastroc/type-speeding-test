@@ -47,6 +47,7 @@ const SOUND_FILES_COUNT: Record<string, number> = {
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
   const [soundName, setSoundName] = useState<SoundOption>('creamy');
+  
   const [volume, setVolume] = useState<number>(0.4);
 
   const audioCtxRef = useRef<AudioContext | null>(null);

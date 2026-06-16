@@ -25,11 +25,12 @@ import { HistorySection } from '@/components/HistorySection';
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();
 
-  const { category, setCategory, difficulty } = useConfig();
+  const { category, setCategory, difficulty, initialTime } = useConfig();
 
   const { saveRound } = useRoundStats();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNextLoading, setIsNextLoading] = useState(false);
 
   const [showHistorySection, setShowHistorySection] = useState(false);
 
@@ -78,6 +79,7 @@ export default function Home() {
     isRandomizingRef.current = false;
   };
   const onNextText = async () => {
+    setIsNextLoading(true);
     const result = await mutate(undefined, { revalidate: true });
 
     if (result?.data?.content) {
@@ -85,6 +87,7 @@ export default function Home() {
       reset(result.data.content);
       prepare();
     }
+    setIsNextLoading(false);
   };
 
   const {
@@ -114,6 +117,7 @@ export default function Home() {
       inputRef.current?.blur();
       if (stats) saveRound(stats);
     },
+    initialTime,
   });
 
   const handlePrepare = () => {
@@ -140,6 +144,11 @@ export default function Home() {
     setCurrentText(data.content);
     reset(data.content);
   }, [data]);
+
+  useEffect(() => {
+    if (!currentText) return;
+    reset(currentText);
+  }, [initialTime]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -185,8 +194,8 @@ export default function Home() {
     };
   }, [isStarted, isCompleted, isPaused, pause]);
 
-  const isLoading = isValidating;
-  const loadingButton = isLoading ? 'randomize' : null;
+  const isLoading = isValidating || isNextLoading;
+  const loadingButton = isNextLoading ? 'next' : isValidating ? 'randomize' : null;
 
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
@@ -220,6 +229,7 @@ export default function Home() {
           metrics={metrics}
           mode={mode}
           timeLeft={timeLeft}
+          progress={words.length > 0 ? activeWordIndex / words.length : 0}
         />
       )}
 

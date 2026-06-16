@@ -10,6 +10,7 @@ type MetricsPanelProps = {
   mode: 'timed' | 'passage';
   isStarted: boolean;
   timeLeft: number;
+  progress?: number;
 };
 
 export const MetricsPanel = ({
@@ -17,6 +18,7 @@ export const MetricsPanel = ({
   mode,
   isStarted,
   timeLeft,
+  progress = 0,
 }: MetricsPanelProps) => {
   const accuracyColor = !isStarted
     ? 'text-neutral-0'
@@ -43,14 +45,24 @@ export const MetricsPanel = ({
   );
 
   return (
-    <div className="mt-16 flex w-full items-center justify-center border-b border-b-neutral-700 pb-4 divide-x divide-neutral-600">
-      <Item label="WPM:" value={wpm} />
-      <Item
-        label="Accuracy:"
-        value={`${accuracy}%`}
-        valueClass={accuracyColor}
-      />
-      <Item label="Time:" value={formatTime(timeLeft)} valueClass={timeColor} />
+    <div className="mt-16">
+      <div className="flex w-full items-center justify-center pb-4 divide-x divide-neutral-600">
+        <Item label="WPM:" value={wpm} />
+        <Item
+          label="Accuracy:"
+          value={`${accuracy}%`}
+          valueClass={accuracyColor}
+        />
+        <Item label="Time:" value={formatTime(timeLeft)} valueClass={timeColor} />
+      </div>
+      <div className="w-full h-px bg-neutral-700 overflow-hidden">
+        {isStarted && (
+          <div
+            className="h-full bg-blue-500 transition-all duration-150"
+            style={{ width: `${progress * 100}%` }}
+          />
+        )}
+      </div>
     </div>
   );
 };

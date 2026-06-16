@@ -98,7 +98,7 @@ export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
                   { id: 'click', name: 'Click' },
                   { id: 'hitmarker', name: 'Hitmarker' },
                 ]}
-                onSelect={(item) => setSoundName(item)}
+                onSelect={(item) => setSoundName(item as import('@/contexts/SoundContext').SoundOption)}
               />
               <button
                 onClick={playPreview}
