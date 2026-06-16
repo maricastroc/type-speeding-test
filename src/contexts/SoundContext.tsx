@@ -18,15 +18,17 @@ export type SoundOption =
   | 'hitmarker'
   | 'osu'
   | 'pop'
-  | 'rubber'
   | 'typewriter'
   | 'error';
 
 interface SoundContextType {
   soundName: SoundOption;
   setSoundName: (name: SoundOption) => void;
+  volume: number;
+  setVolume: (volume: number) => void;
   playKeystroke: () => void;
   playErrorSound: () => void;
+  playPreview: () => void;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -40,12 +42,12 @@ const SOUND_FILES_COUNT: Record<string, number> = {
   hitmarker: 6,
   osu: 6,
   pop: 3,
-  rubber: 5,
   typewriter: 12,
 };
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
   const [soundName, setSoundName] = useState<SoundOption>('creamy');
+  const [volume, setVolume] = useState<number>(0.4);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -89,14 +91,45 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
     const gainNode = ctx.createGain();
 
-    gainNode.gain.value = 0.4;
+    gainNode.gain.value = volume;
 
     source.connect(gainNode);
 
     gainNode.connect(ctx.destination);
 
     source.start(0);
-  }, [soundName]);
+  }, [soundName, volume]);
+
+  const playPreview = useCallback(async () => {
+    if (soundName === 'none') return;
+
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') await ctx.resume();
+
+    if (!bufferCache.current.has(soundName)) {
+      const count = SOUND_FILES_COUNT[soundName] || 1;
+      const promises = Array.from({ length: count }).map((_, i) =>
+        fetch(`/assets/sounds/${soundName}/${soundName}${i + 1}.wav`)
+          .then((res) => res.arrayBuffer())
+          .then((data) => ctx.decodeAudioData(data))
+      );
+      bufferCache.current.set(soundName, await Promise.all(promises));
+    }
+
+    const buffers = bufferCache.current.get(soundName);
+    if (!buffers) return;
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffers[Math.floor(Math.random() * buffers.length)];
+    source.playbackRate.value = 0.95 + Math.random() * 0.1;
+
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = volume;
+
+    source.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    source.start(0);
+  }, [soundName, volume]);
 
   const playErrorSound = useCallback(async () => {
     const ctx = getAudioCtx();
@@ -139,7 +172,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <SoundContext.Provider
-      value={{ playKeystroke, playErrorSound, setSoundName, soundName }}
+      value={{ playKeystroke, playErrorSound, playPreview, setSoundName, soundName, volume, setVolume }}
     >
       {children}
     </SoundContext.Provider>

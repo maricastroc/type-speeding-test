@@ -12,6 +12,7 @@ type SettingsRowProps = {
   options: Option[];
   currentValue: string;
   onChange: (value: any) => void;
+  compact?: boolean;
 };
 
 export const SettingsRow = ({
@@ -20,11 +21,12 @@ export const SettingsRow = ({
   options,
   currentValue,
   onChange,
+  compact,
 }: SettingsRowProps) => {
   if (type === 'dropdown') {
     return (
       <div className="flex gap-2 items-center justify-start">
-        <span className="text-neutral-400 text-preset-5 w-20">{label}</span>
+        <span className="text-neutral-500 text-preset-5 w-20">{label}</span>
         <SelectInput
           label={label}
           placeholder={`Select ${label.toLowerCase()}`}
@@ -40,15 +42,16 @@ export const SettingsRow = ({
   }
 
   return (
-    <div className="flex items-center justify-start gap-3">
-      <label className="text-neutral-400 text-preset-5 w-20">{label}</label>
-      <div className="flex gap-2 flex-wrap">
+    <div className="flex items-center justify-start gap-2">
+      <label className="text-neutral-500 text-preset-5 w-20">{label}</label>
+      <div className="flex gap-1.5 flex-wrap">
         {options.map((option) => (
           <button
             key={option.value}
             onClick={() => onChange(option.value)}
             className={`
-              cursor-pointer px-4 py-2 rounded-lg text-preset-5 transition
+              cursor-pointer rounded-md text-preset-5 transition
+              ${compact ? 'px-3 py-1' : 'px-4 py-2 rounded-lg'}
               ${
                 currentValue === option.value
                   ? 'bg-blue-500 text-white'

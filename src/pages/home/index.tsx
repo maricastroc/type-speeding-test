@@ -138,6 +138,7 @@ export default function Home() {
     if (!data?.content) return;
 
     setCurrentText(data.content);
+    reset(data.content);
   }, [data]);
 
   useEffect(() => {

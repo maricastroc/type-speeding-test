@@ -14,6 +14,7 @@ interface SelectInputProps {
   onSelect: (value: string) => void;
   placeholder: string;
   defaultValue?: string | null;
+  compact?: boolean;
 }
 
 export const SelectInput = ({
@@ -22,6 +23,7 @@ export const SelectInput = ({
   onSelect,
   placeholder,
   defaultValue = null,
+  compact,
 }: SelectInputProps) => {
   return (
     <Select.Root
@@ -31,7 +33,7 @@ export const SelectInput = ({
       <label className="sr-only">{label}</label>
 
       <Select.Trigger
-        className="flex items-center justify-between w-36 px-4 py-2 rounded-lg text-preset-5 text-neutral-0 bg-blue-500 shadow-sm"
+        className={`flex items-center justify-between text-preset-5 text-neutral-0 bg-blue-500 shadow-sm rounded-lg ${compact ? 'px-3 py-1 w-28' : 'px-4 py-2 w-36'}`}
         aria-label={label}
       >
         <Select.Value className="text-grey-900" placeholder={placeholder} />
