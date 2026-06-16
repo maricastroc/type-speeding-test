@@ -80,11 +80,16 @@ export const useRoundStats = () => {
     return uniqueRounds;
   }, []);
 
+  const deleteRound = useCallback((id: string) => {
+    StatsService.deleteRound(id);
+  }, []);
+
   return {
     saveRound,
     getHistory,
     getRecentRounds,
     getRoundsByMode,
     cleanupDuplicates,
+    deleteRound,
   };
 };

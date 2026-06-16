@@ -48,6 +48,12 @@ export class StatsService {
     return newRound;
   }
 
+  static deleteRound(id: string): void {
+    const rounds = this.getStoredRounds().filter((r) => r.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rounds));
+    window.dispatchEvent(new CustomEvent('statsUpdated'));
+  }
+
   static getStoredRounds(): RoundStats[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);

@@ -6,7 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { usePersonalBest } from '@/features/typing/hooks/usePersonalBest';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCrown } from '@fortawesome/free-solid-svg-icons';
+import { faCrown, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 type Props = {
   open: boolean;
@@ -14,15 +14,18 @@ type Props = {
 };
 
 export function HistorySection({ open, onOpenChange }: Props) {
-  const { getRecentRounds } = useRoundStats();
+  const { getRecentRounds, deleteRound } = useRoundStats();
 
   const personalBest = usePersonalBest();
 
   const [isOpen, setIsOpen] = useState(open);
-
   const [shouldRender, setShouldRender] = useState(open);
+  const [rounds, setRounds] = useState(() => getRecentRounds(5));
 
-  const recentRounds = getRecentRounds(5);
+  const handleDelete = (id: string) => {
+    deleteRound(id);
+    setRounds(getRecentRounds(5));
+  };
 
   useEffect(() => {
     if (open) {
@@ -69,14 +72,14 @@ export function HistorySection({ open, onOpenChange }: Props) {
 
           <div className="mt-8 flex flex-col flex-1">
             <div className="space-y-4 overflow-y-visible overflow-x-visible flex-1">
-              {recentRounds.map((round) => {
+              {rounds.map((round) => {
                 const isBest = round.wpm === personalBest;
 
                 return (
                   <div
                     key={round.id}
                     className={`
-        relative flex items-center justify-between p-4 rounded-xl
+        group relative flex items-center justify-between p-4 rounded-xl
         border transition-all duration-300
         ${
           isBest
@@ -111,11 +114,18 @@ export function HistorySection({ open, onOpenChange }: Props) {
                       </p>
                     </div>
 
-                    <p className="text-sm text-neutral-500">
-                      {formatDistanceToNow(round.timestamp, {
-                        addSuffix: true,
-                      })}
-                    </p>
+                    <div className="flex flex-col items-end gap-2">
+                      <p className="text-sm text-neutral-500">
+                        {formatDistanceToNow(round.timestamp, { addSuffix: true })}
+                      </p>
+                      <button
+                        onClick={() => handleDelete(round.id)}
+                        className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 hover:text-red-500"
+                        title="Delete"
+                      >
+                        <FontAwesomeIcon icon={faTrash} size="sm" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
