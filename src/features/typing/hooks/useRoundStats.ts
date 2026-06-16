@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { StatsService } from '@/services/statsService';
-import { useConfig } from '@/contexts/ConfigContext';
+import { useConfig } from '@/features/settings/context/ConfigContext';
 
 export const useRoundStats = () => {
   const { mode, category, difficulty } = useConfig();

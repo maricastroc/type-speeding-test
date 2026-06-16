@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useEffect, useRef, useReducer } from 'react';
 
-import { useConfig } from '@/contexts/ConfigContext';
+import { useConfig } from '@/features/settings/context/ConfigContext';
 import { useTimer } from './useTimer';
 import { buildChartData } from '@/utils/buildChartData';
 import { engineReducer, createInitialState } from './engineReducer';
@@ -9,7 +9,7 @@ import {
   canTypeMoreChars,
   isLastWordComplete,
   calculateMetrics,
-} from '@/logic/typing';
+} from '@/features/typing/logic/typing';
 
 import type { RoundStats } from '@/types/roundStats';
 import type { HistoryStats } from '@/types/historyStats';

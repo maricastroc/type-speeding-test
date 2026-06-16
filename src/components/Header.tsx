@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBell, faGear } from '@fortawesome/free-solid-svg-icons';
-import { usePersonalBest } from '@/hooks/usePersonalBest';
+import { usePersonalBest } from '@/features/typing/hooks/usePersonalBest';
 
 type HeaderProps = {
   onOpenSettings: (value: boolean) => void;

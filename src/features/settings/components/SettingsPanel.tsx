@@ -1,7 +1,7 @@
 import { SettingsRow } from './SettingsRow';
 import { SelectInput } from './SelectInput';
-import { useSound } from '@/contexts/SoundContext';
-import { useConfig } from '@/contexts/ConfigContext';
+import { useSound } from '@/features/sound/context/SoundContext';
+import { useConfig } from '@/features/settings/context/ConfigContext';
 
 type SettingsPanelProps = {
   setIsOpen: (value: boolean) => void;
@@ -98,7 +98,7 @@ export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
                   { id: 'click', name: 'Click' },
                   { id: 'hitmarker', name: 'Hitmarker' },
                 ]}
-                onSelect={(item) => setSoundName(item as import('@/contexts/SoundContext').SoundOption)}
+                onSelect={(item) => setSoundName(item as import('@/features/sound/context/SoundContext').SoundOption)}
               />
               <button
                 onClick={playPreview}

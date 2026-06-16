@@ -3,24 +3,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 
-import { useSound } from '@/contexts/SoundContext';
-import { useConfig } from '@/contexts/ConfigContext';
-import { useTypingEngine } from '@/hooks/useTypingEngine';
-import useRequest from '@/hooks/useRequest';
-import { useRoundStats } from '@/hooks/useRoundStats';
+import { useSound } from '@/features/sound/context/SoundContext';
+import { useConfig } from '@/features/settings/context/ConfigContext';
+import { useTypingEngine } from '@/features/typing/hooks/useTypingEngine';
+import useRequest from '@/features/typing/hooks/useRequest';
+import { useRoundStats } from '@/features/typing/hooks/useRoundStats';
 import { calculateGeneralStats } from '@/utils/calculateStats';
 import { TextResponse } from '@/types/textResponse';
 import { api } from '@/lib/axios';
 
 import { Header } from '@/components/Header';
-import { SettingsPanel } from '@/components/SettingsPanel';
-import { ActionButtons } from '@/components/ActionButtons';
-import { WordDisplay } from '@/components/WordDisplay';
-import { TagsContainer } from '@/components/TagsContainer';
-import { PauseWarning } from '@/components/PauseWarning';
-import { MetricsPanel } from '@/components/MetricsPanel';
-import { ResultSection } from '@/components/ResultSection';
-import { HistorySection } from '@/components/HistorySection';
+import { SettingsPanel } from '@/features/settings/components/SettingsPanel';
+import { ActionButtons } from '@/features/typing/components/ActionButtons';
+import { WordDisplay } from '@/features/typing/components/WordDisplay';
+import { TagsContainer } from '@/features/typing/components/TagsContainer';
+import { PauseWarning } from '@/features/typing/components/PauseWarning';
+import { MetricsPanel } from '@/features/typing/components/MetricsPanel';
+import { ResultSection } from '@/features/results/components/ResultSection';
+import { HistorySection } from '@/features/results/components/HistorySection';
 
 export default function Home() {
   const { playKeystroke, playErrorSound } = useSound();

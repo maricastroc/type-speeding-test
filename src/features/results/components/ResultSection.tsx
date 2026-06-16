@@ -3,8 +3,8 @@ import { ResultChart } from './ResultChart';
 import { StatsDisplay } from './StatsDisplay';
 import { GeneralStats } from '@/types/generalStats';
 import { ChartPoint } from '@/types/chartPoint';
-import { ResumeSection } from './ResumeSection';
-import { useRoundStats } from '@/hooks/useRoundStats';
+import { ResumeSection } from '@/features/typing/components/ResumeSection';
+import { useRoundStats } from '@/features/typing/hooks/useRoundStats';
 import { useEffect, useRef } from 'react';
 
 type ResultSectionProps = {

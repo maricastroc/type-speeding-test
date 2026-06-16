@@ -1,5 +1,5 @@
-import { ConfigProvider } from '@/contexts/ConfigContext';
-import { SoundProvider } from '@/contexts/SoundContext';
+import { ConfigProvider } from '@/features/settings/context/ConfigContext';
+import { SoundProvider } from '@/features/sound/context/SoundContext';
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import { Sora, Roboto_Mono } from 'next/font/google';

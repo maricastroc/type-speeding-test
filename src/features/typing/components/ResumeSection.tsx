@@ -1,4 +1,4 @@
-import { useConfig } from '@/contexts/ConfigContext';
+import { useConfig } from '@/features/settings/context/ConfigContext';
 import { GeneralStats } from '@/types/generalStats';
 import { capitalize } from '@/utils/capitalizeText';
 
