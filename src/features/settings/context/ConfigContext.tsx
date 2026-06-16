@@ -1,7 +1,8 @@
 // contexts/ConfigContext.tsx
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 type GameMode = 'timed' | 'passage';
 type Theme = 'dark' | 'light';
@@ -29,19 +30,11 @@ interface ConfigContextType {
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<GameMode>('timed');
-
-  const [category, setCategory] = useState<
-    'general' | 'lyrics' | 'quotes' | 'code'
-  >('general');
-
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>(
-    'easy'
-  );
-
-  const [initialTime, setInitialTime] = useState(60);
-
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [mode, setMode] = useLocalStorage<GameMode>('config:mode', 'timed');
+  const [category, setCategory] = useLocalStorage<Category>('config:category', 'general');
+  const [difficulty, setDifficulty] = useLocalStorage<Difficulty>('config:difficulty', 'easy');
+  const [initialTime, setInitialTime] = useLocalStorage<number>('config:initialTime', 60);
+  const [theme, setTheme] = useLocalStorage<Theme>('config:theme', 'dark');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

@@ -6,8 +6,8 @@ import React, {
   useContext,
   useRef,
   useCallback,
-  useState,
 } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 export type SoundOption =
   | 'none'
@@ -46,9 +46,8 @@ const SOUND_FILES_COUNT: Record<string, number> = {
 };
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
-  const [soundName, setSoundName] = useState<SoundOption>('creamy');
-  
-  const [volume, setVolume] = useState<number>(0.4);
+  const [soundName, setSoundName] = useLocalStorage<SoundOption>('sound:name', 'creamy');
+  const [volume, setVolume] = useLocalStorage<number>('sound:volume', 0.4);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
 

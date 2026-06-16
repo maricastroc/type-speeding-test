@@ -32,6 +32,10 @@
   --neutral-500: #777777;
   --neutral-400: #444444;
   --neutral-0: #000000;
+
+  --red-500: #D64D5B;
+  --green-500: #4DD67B;
+  --yellow-500: #db9f67;
 }
 
 @theme inline {
