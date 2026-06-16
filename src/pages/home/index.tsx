@@ -197,6 +197,23 @@ export default function Home() {
   const isLoading = isValidating || isNextLoading;
   const loadingButton = isNextLoading ? 'next' : isValidating ? 'randomize' : null;
 
+  const [showResults, setShowResults] = useState(false);
+  const [textFading, setTextFading] = useState(false);
+
+  useEffect(() => {
+    if (!isCompleted) {
+      setShowResults(false);
+      setTextFading(false);
+      return;
+    }
+    setTextFading(true);
+    const t = setTimeout(() => setShowResults(true), 350);
+    return () => clearTimeout(t);
+  }, [isCompleted]);
+
+  const showCountdown =
+    mode === 'timed' && isStarted && !isCompleted && timeLeft <= 3 && timeLeft > 0;
+
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
       <Header
@@ -214,16 +231,18 @@ export default function Home() {
         />
       </Dialog.Root>
 
-      {isCompleted && (
-        <ResultSection
-          metrics={metrics}
-          finishedTime={finishedTime}
-          chartData={chartData}
-          generalStats={generalStats}
-        />
+      {showResults && (
+        <div className="animate-resultIn">
+          <ResultSection
+            metrics={metrics}
+            finishedTime={finishedTime}
+            chartData={chartData}
+            generalStats={generalStats}
+          />
+        </div>
       )}
 
-      {!isCompleted && (
+      {!showResults && (
         <MetricsPanel
           isStarted={isStarted}
           metrics={metrics}
@@ -234,13 +253,24 @@ export default function Home() {
       )}
 
       <div className="mt-10 relative mx-auto text-left">
-        {!isCompleted && (
+        {!showResults && (
           <div
             onClick={() => isReady && inputRef.current?.focus()}
-            className={`max-h-42 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text ${
+            className={`max-h-42 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text transition-opacity duration-300 ${
               !isReady || isPaused || isLoading ? 'blur-xs opacity-70' : ''
-            }`}
+            } ${textFading ? 'opacity-0' : ''}`}
           >
+            {words.length === 0 && (
+              <div className="flex flex-col gap-3 py-2">
+                {[80, 60, 72, 55, 68].map((w, i) => (
+                  <div
+                    key={i}
+                    className="h-6 rounded-md bg-neutral-700 animate-pulse"
+                    style={{ width: `${w}%` }}
+                  />
+                ))}
+              </div>
+            )}
             {words.map((word, wordIdx) => (
               <div
                 key={wordIdx}
@@ -275,6 +305,17 @@ export default function Home() {
               setTimeout(() => inputRef.current?.focus(), 10);
             }}
           />
+        )}
+
+        {showCountdown && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span
+              key={timeLeft}
+              className="animate-countdownPop text-[120px] font-bold leading-none text-blue-400 opacity-80"
+            >
+              {timeLeft}
+            </span>
+          </div>
         )}
 
         {!isReady && !isCompleted && !isPaused && (
