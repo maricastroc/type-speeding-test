@@ -1,9 +1,10 @@
 // contexts/ConfigContext.tsx
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type GameMode = 'timed' | 'passage';
+type Theme = 'dark' | 'light';
 
 type Category = 'general' | 'lyrics' | 'quotes' | 'code';
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -20,6 +21,9 @@ interface ConfigContextType {
 
   initialTime: number;
   setInitialTime: (time: number) => void;
+
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
@@ -37,6 +41,12 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
   const [initialTime, setInitialTime] = useState(60);
 
+  const [theme, setTheme] = useState<Theme>('dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   return (
     <ConfigContext.Provider
       value={{
@@ -48,6 +58,8 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         setDifficulty,
         initialTime,
         setInitialTime,
+        theme,
+        setTheme,
       }}
     >
       {children}

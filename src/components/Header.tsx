@@ -28,7 +28,7 @@ export const Header = ({
           />
 
           <div className="hidden md:flex flex-col items-start gap-[0.1rem]">
-            <h1 className="text-2xl font-bold bg-linear-to-t from-blue-400 via-blue-200 to-blue-100 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold title-gradient bg-clip-text text-transparent">
               Typing Speed Test
             </h1>
             <p className="text-neutral-400 text-preset-7">
@@ -44,6 +44,7 @@ export const Header = ({
               alt="Personal Best Icon"
               width={25}
               height={25}
+              className="trophy-icon"
             />
             <p className="hidden md:block text-preset-4 text-neutral-400">
               Personal Best:

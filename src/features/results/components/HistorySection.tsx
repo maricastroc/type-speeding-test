@@ -5,7 +5,6 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { usePersonalBest } from '@/features/typing/hooks/usePersonalBest';
-import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCrown } from '@fortawesome/free-solid-svg-icons';
 

@@ -9,7 +9,7 @@ type SettingsPanelProps = {
 };
 
 export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
-  const { mode, setMode, category, setCategory, difficulty, setDifficulty, initialTime, setInitialTime } =
+  const { mode, setMode, category, setCategory, difficulty, setDifficulty, initialTime, setInitialTime, theme, setTheme } =
     useConfig();
 
   const currentModeValue = mode === 'passage' ? 'passage' : String(initialTime);
@@ -139,8 +139,8 @@ export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
               label="Theme"
               type="radio"
               compact
-              currentValue="dark"
-              onChange={() => {}}
+              currentValue={theme}
+              onChange={(value) => setTheme(value as 'dark' | 'light')}
               options={[
                 { label: 'Dark', value: 'dark' },
                 { label: 'Light', value: 'light' },

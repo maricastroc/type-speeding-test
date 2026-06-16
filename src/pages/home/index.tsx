@@ -280,7 +280,7 @@ export default function Home() {
         {!isReady && !isCompleted && !isPaused && (
           <div
             onClick={handlePrepare}
-            className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 rounded-lg"
+            className="absolute inset-0 flex flex-col items-center justify-center rounded-lg"
           >
             <button
               onClick={handlePrepare}
@@ -288,7 +288,7 @@ export default function Home() {
             >
               Start Typing Test
             </button>
-            <p className="text-preset-5-semibold mt-4 text-neutral-300">
+            <p className="text-preset-5-semibold mt-4 text-neutral-400">
               Or click the text and start typing
             </p>
           </div>
