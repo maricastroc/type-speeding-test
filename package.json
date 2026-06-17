@@ -34,7 +34,8 @@
     "react-dom": "19.2.3",
     "react-tooltip": "^5.29.1",
     "recharts": "^3.7.0",
-    "swr": "^2.4.0"
+    "swr": "^2.4.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
