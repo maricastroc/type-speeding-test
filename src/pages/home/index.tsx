@@ -228,7 +228,7 @@ export default function Home() {
 
 
   return (
-    <div className="relative min-h-screen p-8 xl:px-28">
+    <div className="relative min-h-screen p-4 md:p-8 xl:px-28">
       <Header
         onOpenHistorySection={() => setShowHistorySection(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -282,7 +282,7 @@ export default function Home() {
         {!showResults && currentText && (
           <div
             onClick={() => isReady && inputRef.current?.focus()}
-            className={`max-h-42 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text transition-opacity duration-300 ${
+            className={`max-h-42 overflow-y-auto scroll-smooth hide-scrollbar text-lg md:text-preset-1-regular leading-normal cursor-text transition-opacity duration-300 ${
               !isReady || isPaused || isLoading ? 'blur-xs opacity-70' : ''
             } ${textFading ? 'opacity-0' : ''}`}
           >

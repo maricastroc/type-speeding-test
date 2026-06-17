@@ -38,9 +38,9 @@ export const MetricsPanel = ({
     value: React.ReactNode;
     valueClass?: string;
   }) => (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3 px-8">
+    <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 px-4 md:px-8">
       <p className="text-preset-4 font-medium text-neutral-400">{label}</p>
-      <span className={`text-preset-2 ${valueClass}`}>{value}</span>
+      <span className={`text-xl md:text-preset-2 ${valueClass}`}>{value}</span>
     </div>
   );
 

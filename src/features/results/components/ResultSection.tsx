@@ -48,7 +48,7 @@ export const ResultSection = ({
   }, [finishedTime, metrics.wpm, metrics.accuracy, saveRound]);
 
   return (
-    <div className="mt-18 flex flex-col items-center justify-center gap-3">
+    <div className="mt-8 md:mt-18 flex flex-col items-center justify-center gap-3">
       <div className="relative flex items-center justify-center w-32 h-32">
         <div className="absolute w-full h-full rounded-full bg-green-500/10" />
 

@@ -29,7 +29,7 @@ export const Heatmap = ({ keystrokes, text }: Props) => {
 
   return (
     <div className="w-full max-w-5xl flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-10 sm:mt-16">
         <h2 className="text-neutral-300 font-semibold text-sm uppercase tracking-widest">
           Word Heatmap
         </h2>

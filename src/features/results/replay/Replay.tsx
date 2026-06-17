@@ -70,7 +70,7 @@ export const Replay = ({ keystrokes, text, onKeystroke }: Props) => {
   );
 
   return (
-    <div className="w-full max-w-5xl flex flex-col gap-4">
+    <div className="w-full max-w-5xl flex flex-col gap-4 mt-10">
       <div className="flex items-center justify-between">
         <h2 className="text-neutral-300 font-semibold text-sm uppercase tracking-widest">
           Replay

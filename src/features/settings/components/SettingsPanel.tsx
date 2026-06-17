@@ -81,46 +81,50 @@ export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-neutral-500 text-preset-5 w-20">Sound</span>
-              <SelectInput
-                label="Sound"
-                placeholder="Select sound"
-                defaultValue={soundName}
-                compact
-                data={[
-                  { id: 'creamy', name: 'Creamy' },
-                  { id: 'beep', name: 'Beep' },
-                  { id: 'osu', name: 'Osu' },
-                  { id: 'pop', name: 'Pop' },
-                  { id: 'punch', name: 'Punch' },
-                  { id: 'typewriter', name: 'Typewriter' },
-                  { id: 'click', name: 'Click' },
-                  { id: 'hitmarker', name: 'Hitmarker' },
-                ]}
-                onSelect={(item) => setSoundName(item as import('@/features/sound/context/SoundContext').SoundOption)}
-              />
-              <button
-                onClick={playPreview}
-                className="cursor-pointer p-1.5 rounded-md bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white transition"
-                title="Preview sound"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-                </svg>
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-20 h-1 rounded-full accent-blue-500 cursor-pointer"
-              />
-              <span className="text-neutral-600 text-preset-5 w-7 text-right tabular-nums">
-                {Math.round(volume * 100)}%
-              </span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-neutral-500 text-preset-5 w-20">Sound</span>
+                <SelectInput
+                  label="Sound"
+                  placeholder="Select sound"
+                  defaultValue={soundName}
+                  compact
+                  data={[
+                    { id: 'creamy', name: 'Creamy' },
+                    { id: 'beep', name: 'Beep' },
+                    { id: 'osu', name: 'Osu' },
+                    { id: 'pop', name: 'Pop' },
+                    { id: 'punch', name: 'Punch' },
+                    { id: 'typewriter', name: 'Typewriter' },
+                    { id: 'click', name: 'Click' },
+                    { id: 'hitmarker', name: 'Hitmarker' },
+                  ]}
+                  onSelect={(item) => setSoundName(item as import('@/features/sound/context/SoundContext').SoundOption)}
+                />
+                <button
+                  onClick={playPreview}
+                  className="cursor-pointer p-1.5 rounded-md bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white transition"
+                  title="Preview sound"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                  </svg>
+                </button>
+              </div>
+              <div className="flex items-center gap-2 pl-20">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-28 h-1 rounded-full accent-blue-500 cursor-pointer"
+                />
+                <span className="text-neutral-600 text-preset-5 w-7 text-right tabular-nums">
+                  {Math.round(volume * 100)}%
+                </span>
+              </div>
             </div>
 
             <SettingsRow

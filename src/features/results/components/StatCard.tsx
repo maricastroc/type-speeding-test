@@ -5,7 +5,7 @@ type StatCardProps = {
 
 export const StatCard = ({ label, value }: StatCardProps) => {
   return (
-    <div className="flex flex-col items-start justify-center w-full border border-neutral-700 rounded-xl p-6 py-3">
+    <div className="flex flex-col items-start justify-center flex-1 min-w-[140px] border border-neutral-700 rounded-xl p-4 py-3 md:p-6">
       <p className="text-xs text-neutral-400 text-preset-3-regular">{label}</p>
 
       <div className="mt-3 flex gap-2 items-center justify-center">{value}</div>
