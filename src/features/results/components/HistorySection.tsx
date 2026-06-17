@@ -17,11 +17,15 @@ type Props = {
 
 export function HistorySection({ open, onOpenChange }: Props) {
   const { getRecentRounds, deleteRound, isLoggedIn } = useRoundStats();
-  const personalBest = usePersonalBest();
+  const personalBestFromHook = usePersonalBest();
 
   const [isOpen, setIsOpen] = useState(open);
   const [shouldRender, setShouldRender] = useState(open);
   const [rounds, setRounds] = useState<RoundStats[]>([]);
+
+  const personalBest = rounds.length > 0
+    ? Math.max(...rounds.map((r) => r.wpm))
+    : personalBestFromHook;
 
   const loadRounds = async () => {
     if (isLoggedIn) {
@@ -36,8 +40,12 @@ export function HistorySection({ open, onOpenChange }: Props) {
     }
   };
 
-  const handleDelete = (id: string) => {
-    deleteRound(id);
+  const handleDelete = async (id: string) => {
+    if (isLoggedIn) {
+      await roundsApi.deleteRound(id);
+    } else {
+      deleteRound(id);
+    }
     setRounds((prev) => prev.filter((r) => r.id !== id));
   };
 
@@ -125,15 +133,13 @@ export function HistorySection({ open, onOpenChange }: Props) {
                       <p className="text-sm text-neutral-500">
                         {formatDistanceToNow(round.timestamp, { addSuffix: true })}
                       </p>
-                      {!isLoggedIn && (
-                        <button
-                          onClick={() => handleDelete(round.id)}
-                          className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 hover:text-red-500"
-                          title="Delete"
-                        >
-                          <FontAwesomeIcon icon={faTrash} size="sm" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDelete(round.id)}
+                        className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 hover:text-red-500"
+                        title="Delete"
+                      >
+                        <FontAwesomeIcon icon={faTrash} size="sm" />
+                      </button>
                     </div>
                   </div>
                 );

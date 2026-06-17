@@ -33,7 +33,9 @@ export const useRoundStats = () => {
       const payload = { ...statsData, mode, difficulty };
 
       if (isLoggedIn) {
-        return roundsApi.saveRound(payload);
+        const round = await roundsApi.saveRound(payload);
+        window.dispatchEvent(new CustomEvent('statsUpdated'));
+        return round;
       }
 
       return StatsService.saveRound(payload);

@@ -37,6 +37,11 @@ export const roundsApi = {
     };
   },
 
+  async deleteRound(id: string): Promise<void> {
+    const res = await fetch(`/api/rounds/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete round');
+  },
+
   async migrateLocalRounds(rounds: RoundStats[]): Promise<void> {
     if (rounds.length === 0) return;
     await fetch('/api/rounds/migrate', {
