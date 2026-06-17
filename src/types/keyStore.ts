@@ -1,5 +1,7 @@
 export type Keystroke = {
-  timestampMs: number;
-  isCorrect: boolean;
+  charIndex: number;
+  expectedChar: string;
   typedChar: string;
+  isCorrect: boolean;
+  timestampMs: number;
 };

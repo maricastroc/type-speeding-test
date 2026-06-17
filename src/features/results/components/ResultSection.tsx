@@ -6,6 +6,9 @@ import { ChartPoint } from '@/types/chartPoint';
 import { ResumeSection } from '@/features/typing/components/ResumeSection';
 import { useRoundStats } from '@/features/typing/hooks/useRoundStats';
 import { useEffect, useRef } from 'react';
+import { Heatmap } from '@/features/results/heatmap/Heatmap';
+import { Replay } from '@/features/results/replay/Replay';
+import { Keystroke } from '@/types/keyStore';
 
 type ResultSectionProps = {
   generalStats: GeneralStats;
@@ -15,6 +18,8 @@ type ResultSectionProps = {
     wpm: number;
     accuracy: number;
   };
+  keystrokes: Keystroke[];
+  text: string;
 };
 
 export const ResultSection = ({
@@ -22,6 +27,8 @@ export const ResultSection = ({
   finishedTime,
   chartData,
   generalStats,
+  keystrokes,
+  text,
 }: ResultSectionProps) => {
   const { saveRound } = useRoundStats();
   const hasSavedRef = useRef(false);
@@ -63,6 +70,8 @@ export const ResultSection = ({
       <div className="w-full max-w-5xl flex flex-col gap-4 items-center justify-center">
         <StatsDisplay stats={generalStats} />
         <ResultChart data={chartData} />
+        <Heatmap keystrokes={keystrokes} text={text} />
+        <Replay keystrokes={keystrokes} text={text} />
       </div>
 
       <ResumeSection generalStats={generalStats} finishedTime={finishedTime} />

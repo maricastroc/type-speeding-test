@@ -58,12 +58,12 @@ describe('calculateMetrics', () => {
 
   it('calculates wpm and accuracy correctly', () => {
     const keystrokes = [
-      { timestampMs: 1000, isCorrect: true, typedChar: 'h' },
-      { timestampMs: 2000, isCorrect: true, typedChar: 'e' },
-      { timestampMs: 3000, isCorrect: true, typedChar: 'l' },
-      { timestampMs: 4000, isCorrect: true, typedChar: 'l' },
-      { timestampMs: 5000, isCorrect: true, typedChar: 'o' },
-      { timestampMs: 6000, isCorrect: false, typedChar: 'x' },
+      { charIndex: 0, expectedChar: 'h', typedChar: 'h', isCorrect: true, timestampMs: 1000 },
+      { charIndex: 1, expectedChar: 'e', typedChar: 'e', isCorrect: true, timestampMs: 2000 },
+      { charIndex: 2, expectedChar: 'l', typedChar: 'l', isCorrect: true, timestampMs: 3000 },
+      { charIndex: 3, expectedChar: 'l', typedChar: 'l', isCorrect: true, timestampMs: 4000 },
+      { charIndex: 4, expectedChar: 'o', typedChar: 'o', isCorrect: true, timestampMs: 5000 },
+      { charIndex: 5, expectedChar: 'w', typedChar: 'x', isCorrect: false, timestampMs: 6000 },
     ];
     const result = calculateMetrics(keystrokes, 60);
     expect(result.wpm).toBe(1); // 5 correct / 5 chars per word / 1 min
@@ -72,8 +72,8 @@ describe('calculateMetrics', () => {
 
   it('ignores Backspace keystrokes in accuracy', () => {
     const keystrokes = [
-      { timestampMs: 1000, isCorrect: true, typedChar: 'a' },
-      { timestampMs: 2000, isCorrect: false, typedChar: 'Backspace' },
+      { charIndex: 0, expectedChar: 'a', typedChar: 'a', isCorrect: true, timestampMs: 1000 },
+      { charIndex: 0, expectedChar: 'a', typedChar: 'Backspace', isCorrect: false, timestampMs: 2000 },
     ];
     const result = calculateMetrics(keystrokes, 60);
     expect(result.accuracy).toBe(100); // backspace ignored, 1 correct / 1 total

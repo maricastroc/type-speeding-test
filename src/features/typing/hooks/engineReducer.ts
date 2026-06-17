@@ -14,7 +14,7 @@ export type EngineAction =
   | { type: 'PREPARE' }
   | { type: 'RESET'; words: string[] }
   | { type: 'START' }
-  | { type: 'TYPE_CHAR'; wordIndex: number; char: string; isCorrect: boolean; timestampMs: number }
+  | { type: 'TYPE_CHAR'; wordIndex: number; char: string; isCorrect: boolean; timestampMs: number; charIndex: number; expectedChar: string }
   | { type: 'BACKSPACE'; wordIndex: number }
   | { type: 'ADVANCE_WORD' }
   | { type: 'FINISH'; finalTime: number };
@@ -50,7 +50,13 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
         userInput,
         keystrokes: [
           ...state.keystrokes,
-          { timestampMs: action.timestampMs, isCorrect: action.isCorrect, typedChar: action.char },
+          {
+            charIndex: action.charIndex,
+            expectedChar: action.expectedChar,
+            typedChar: action.char,
+            isCorrect: action.isCorrect,
+            timestampMs: action.timestampMs,
+          },
         ],
       };
     }

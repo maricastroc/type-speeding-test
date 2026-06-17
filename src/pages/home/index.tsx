@@ -251,6 +251,8 @@ export default function Home() {
             finishedTime={finishedTime}
             chartData={chartData}
             generalStats={generalStats}
+            keystrokes={keystrokes}
+            text={currentText}
           />
         </div>
       )}

@@ -37,10 +37,18 @@ describe('engineReducer', () => {
       char: 'h',
       isCorrect: true,
       timestampMs: 1000,
+      charIndex: 0,
+      expectedChar: 'h',
     });
     expect(state.userInput[0]).toBe('h');
     expect(state.keystrokes).toHaveLength(1);
-    expect(state.keystrokes[0]).toEqual({ timestampMs: 1000, isCorrect: true, typedChar: 'h' });
+    expect(state.keystrokes[0]).toEqual({
+      charIndex: 0,
+      expectedChar: 'h',
+      typedChar: 'h',
+      isCorrect: true,
+      timestampMs: 1000,
+    });
   });
 
   it('BACKSPACE removes last char', () => {

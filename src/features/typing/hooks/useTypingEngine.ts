@@ -100,10 +100,14 @@ export const useTypingEngine = (text: string, options?: TypingOptions) => {
 
       if (key.length === 1 && key !== ' ') {
         if (!canTypeMoreChars(currentTyped, currentWord)) return;
-        const isCorrect = key === currentWord[currentTyped.length];
+        const charPosInWord = currentTyped.length;
+        const wordStartOffset = words.slice(0, activeWordIndex).reduce((acc, w) => acc + w.length + 1, 0);
+        const charIndex = wordStartOffset + charPosInWord;
+        const expectedChar = currentWord[charPosInWord] ?? '';
+        const isCorrect = key === expectedChar;
         if (isCorrect) options?.onSuccess?.();
         else options?.onError?.();
-        dispatch({ type: 'TYPE_CHAR', wordIndex: activeWordIndex, char: key, isCorrect, timestampMs });
+        dispatch({ type: 'TYPE_CHAR', wordIndex: activeWordIndex, char: key, isCorrect, timestampMs, charIndex, expectedChar });
         return;
       }
 
