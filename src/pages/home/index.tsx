@@ -13,6 +13,7 @@ import { TextResponse } from '@/types/textResponse';
 import { api } from '@/lib/axios';
 
 import { Header } from '@/components/Header';
+import { Button } from '@/components/ui/button';
 import { SettingsPanel } from '@/features/settings/components/SettingsPanel';
 import { ActionButtons } from '@/features/typing/components/ActionButtons';
 import { WordDisplay } from '@/features/typing/components/WordDisplay';
@@ -327,12 +328,9 @@ export default function Home() {
             onClick={handlePrepare}
             className="absolute inset-0 flex flex-col items-center justify-center rounded-lg"
           >
-            <button
-              onClick={handlePrepare}
-              className="cursor-pointer py-4 px-8 rounded-xl bg-blue-500 text-white text-preset-4-semibold hover:brightness-110 transition"
-            >
+            <Button size="lg" onClick={handlePrepare}>
               Start Typing Test
-            </button>
+            </Button>
             <p className="text-preset-5-semibold mt-4 text-neutral-400">
               Or click the text and start typing
             </p>

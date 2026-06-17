@@ -1,5 +1,6 @@
 import { SettingsRow } from './SettingsRow';
 import { SelectInput } from './SelectInput';
+import { Button } from '@/components/ui/button';
 import { useSound } from '@/features/sound/context/SoundContext';
 import { useConfig } from '@/features/settings/context/ConfigContext';
 
@@ -101,15 +102,11 @@ export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
                   ]}
                   onSelect={(item) => setSoundName(item as import('@/features/sound/context/SoundContext').SoundOption)}
                 />
-                <button
-                  onClick={playPreview}
-                  className="cursor-pointer p-1.5 rounded-md bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white transition"
-                  title="Preview sound"
-                >
+                <Button variant="ghost" size="icon" onClick={playPreview} title="Preview sound">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
                   </svg>
-                </button>
+                </Button>
               </div>
               <div className="flex items-center gap-2 pl-20">
                 <input
@@ -152,16 +149,18 @@ export const SettingsPanel = ({ setIsOpen, onPrepare }: SettingsPanelProps) => {
             />
           </div>
 
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setIsOpen(false)}
-            className="cursor-pointer ml-auto self-start p-1.5 rounded-md text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 transition"
+            className="ml-auto self-start text-neutral-500 hover:text-neutral-200"
             title="Close settings"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
-          </button>
+          </Button>
         </div>
       </div>
     </div>
