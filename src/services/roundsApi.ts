@@ -41,13 +41,4 @@ export const roundsApi = {
     const res = await fetch(`/api/rounds/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete round');
   },
-
-  async migrateLocalRounds(rounds: RoundStats[]): Promise<void> {
-    if (rounds.length === 0) return;
-    await fetch('/api/rounds/migrate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rounds }),
-    });
-  },
 };

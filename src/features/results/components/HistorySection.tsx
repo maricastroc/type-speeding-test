@@ -4,11 +4,10 @@ import { useRoundStats } from '@/features/typing/hooks/useRoundStats';
 import * as Dialog from '@radix-ui/react-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { useEffect, useState } from 'react';
-import { usePersonalBest } from '@/features/typing/hooks/usePersonalBest';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCrown, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { roundsApi } from '@/services/roundsApi';
-import type { RoundStats } from '@/types/roundStats';
+import useSWR from 'swr';
 
 type Props = {
   open: boolean;
@@ -17,49 +16,37 @@ type Props = {
 
 export function HistorySection({ open, onOpenChange }: Props) {
   const { getRecentRounds, deleteRound, isLoggedIn } = useRoundStats();
-  const personalBestFromHook = usePersonalBest();
 
   const [isOpen, setIsOpen] = useState(open);
   const [shouldRender, setShouldRender] = useState(open);
-  const [rounds, setRounds] = useState<RoundStats[]>([]);
 
-  const personalBest = rounds.length > 0
-    ? Math.max(...rounds.map((r) => r.wpm))
-    : personalBestFromHook;
+  const { data: apiRounds, mutate } = useSWR(
+    isLoggedIn ? '/api/rounds' : null,
+    () => roundsApi.fetchRounds()
+  );
 
-  const loadRounds = async () => {
-    if (isLoggedIn) {
-      try {
-        const data = await roundsApi.fetchRounds();
-        setRounds(data.slice(0, 5));
-      } catch {
-        setRounds([]);
-      }
-    } else {
-      setRounds(getRecentRounds(5));
-    }
-  };
+  const rounds = isLoggedIn ? (apiRounds ?? []).slice(0, 5) : getRecentRounds(5);
+  const personalBest = rounds.length > 0 ? Math.max(...rounds.map((r) => r.wpm)) : 0;
 
   const handleDelete = async (id: string) => {
     if (isLoggedIn) {
       await roundsApi.deleteRound(id);
+      mutate(apiRounds?.filter((r) => r.id !== id), { revalidate: true });
     } else {
       deleteRound(id);
     }
-    setRounds((prev) => prev.filter((r) => r.id !== id));
   };
 
   useEffect(() => {
     if (open) {
       setIsOpen(true);
       setShouldRender(true);
-      loadRounds();
     } else {
       setIsOpen(false);
       const timer = setTimeout(() => setShouldRender(false), 250);
       return () => clearTimeout(timer);
     }
-  }, [open, isLoggedIn]);
+  }, [open]);
 
   if (!shouldRender) return null;
 

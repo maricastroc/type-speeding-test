@@ -6,9 +6,7 @@ import { faBell, faGear, faRightFromBracket } from '@fortawesome/free-solid-svg-
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { usePersonalBest } from '@/features/typing/hooks/usePersonalBest';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { StatsService } from '@/services/statsService';
-import { roundsApi } from '@/services/roundsApi';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 type HeaderProps = {
   onOpenSettings: (value: boolean) => void;
@@ -18,22 +16,7 @@ type HeaderProps = {
 export const Header = ({ onOpenSettings, onOpenHistorySection }: HeaderProps) => {
   const personalBest = usePersonalBest();
   const { data: session, status } = useSession();
-  const hasMigratedRef = useRef(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  // migrate localStorage rounds to DB once after login
-  useEffect(() => {
-    if (status !== 'authenticated' || hasMigratedRef.current) return;
-    hasMigratedRef.current = true;
-
-    const localRounds = StatsService.getStoredRounds();
-    if (localRounds.length === 0) return;
-
-    roundsApi.migrateLocalRounds(localRounds).then(() => {
-      localStorage.removeItem('@typing-stats');
-      window.dispatchEvent(new CustomEvent('statsUpdated'));
-    });
-  }, [status]);
 
   return (
     <div className="flex justify-between w-full">

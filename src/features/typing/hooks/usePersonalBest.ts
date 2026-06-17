@@ -1,46 +1,40 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { StatsService } from '@/services/statsService';
 import { roundsApi } from '@/services/roundsApi';
+import useSWR from 'swr';
 
 export const usePersonalBest = () => {
-  const [personalBest, setPersonalBest] = useState(0);
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user?.id;
 
-  const fetchPersonalBest = useCallback(async () => {
-    if (isLoggedIn) {
-      try {
-        const rounds = await roundsApi.fetchRounds();
-        const best = rounds.length > 0 ? Math.max(...rounds.map((r) => r.wpm)) : 0;
-        setPersonalBest(best);
-      } catch {
-        setPersonalBest(0);
-      }
-      return;
-    }
+  const { data: rounds } = useSWR(
+    isLoggedIn ? '/api/rounds' : null,
+    () => roundsApi.fetchRounds()
+  );
 
-    const rounds = StatsService.getStoredRounds();
-    const best = rounds.length > 0 ? Math.max(...rounds.map((r) => r.wpm)) : 0;
-    setPersonalBest(best);
-  }, [isLoggedIn]);
+  const [localBest, setLocalBest] = useState(0);
 
   useEffect(() => {
-    fetchPersonalBest();
+    if (isLoggedIn) return;
 
-    const handleStatsUpdate = () => fetchPersonalBest();
-    window.addEventListener('statsUpdated', handleStatsUpdate);
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === '@typing-stats') fetchPersonalBest();
+    const compute = () => {
+      const stored = StatsService.getStoredRounds();
+      setLocalBest(stored.length > 0 ? Math.max(...stored.map((r) => r.wpm)) : 0);
     };
-    window.addEventListener('storage', handleStorageChange);
 
-    return () => {
-      window.removeEventListener('statsUpdated', handleStatsUpdate);
-      window.removeEventListener('storage', handleStorageChange);
+    compute();
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === '@typing-stats') compute();
     };
-  }, [fetchPersonalBest]);
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [isLoggedIn]);
 
-  return personalBest;
+  if (isLoggedIn) {
+    return rounds && rounds.length > 0 ? Math.max(...rounds.map((r) => r.wpm)) : 0;
+  }
+
+  return localBest;
 };

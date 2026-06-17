@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { StatsService } from '@/services/statsService';
 import { roundsApi } from '@/services/roundsApi';
+import { mutate } from 'swr';
 import { useConfig } from '@/features/settings/context/ConfigContext';
 
 export const useRoundStats = () => {
@@ -34,7 +35,7 @@ export const useRoundStats = () => {
 
       if (isLoggedIn) {
         const round = await roundsApi.saveRound(payload);
-        window.dispatchEvent(new CustomEvent('statsUpdated'));
+        mutate('/api/rounds');
         return round;
       }
 
