@@ -1,34 +1,38 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { StatsService } from '@/services/statsService';
+import { roundsApi } from '@/services/roundsApi';
 
 export const usePersonalBest = () => {
   const [personalBest, setPersonalBest] = useState(0);
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user?.id;
 
-  const fetchPersonalBest = useCallback(() => {
-    const rounds = StatsService.getStoredRounds();
-
-    if (rounds.length === 0) {
-      setPersonalBest(0);
+  const fetchPersonalBest = useCallback(async () => {
+    if (isLoggedIn) {
+      try {
+        const rounds = await roundsApi.fetchRounds();
+        const best = rounds.length > 0 ? Math.max(...rounds.map((r) => r.wpm)) : 0;
+        setPersonalBest(best);
+      } catch {
+        setPersonalBest(0);
+      }
       return;
     }
 
-    const best = Math.max(...rounds.map((round) => round.wpm));
+    const rounds = StatsService.getStoredRounds();
+    const best = rounds.length > 0 ? Math.max(...rounds.map((r) => r.wpm)) : 0;
     setPersonalBest(best);
-  }, []);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     fetchPersonalBest();
 
-    const handleStatsUpdate = () => {
-      fetchPersonalBest();
-    };
-
+    const handleStatsUpdate = () => fetchPersonalBest();
     window.addEventListener('statsUpdated', handleStatsUpdate);
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === '@typing-stats') {
-        fetchPersonalBest();
-      }
+      if (e.key === '@typing-stats') fetchPersonalBest();
     };
     window.addEventListener('storage', handleStorageChange);
 

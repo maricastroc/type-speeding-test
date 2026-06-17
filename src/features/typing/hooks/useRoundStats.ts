@@ -1,9 +1,13 @@
 import { useCallback, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { StatsService } from '@/services/statsService';
+import { roundsApi } from '@/services/roundsApi';
 import { useConfig } from '@/features/settings/context/ConfigContext';
 
 export const useRoundStats = () => {
   const { mode, category, difficulty } = useConfig();
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user?.id;
 
   const lastSavedRef = useRef<{
     timestamp: number;
@@ -17,32 +21,24 @@ export const useRoundStats = () => {
 
       if (lastSavedRef.current) {
         const { wpm, time } = lastSavedRef.current;
-
         const isSameRound =
           wpm === statsData.wpm &&
           time === statsData.time &&
           now - lastSavedRef.current.timestamp < 1000;
-
-        if (isSameRound) {
-          return null;
-        }
+        if (isSameRound) return null;
       }
 
-      const round = await StatsService.saveRound({
-        ...statsData,
-        mode,
-        difficulty,
-      });
+      lastSavedRef.current = { timestamp: now, wpm: statsData.wpm, time: statsData.time };
 
-      lastSavedRef.current = {
-        timestamp: now,
-        wpm: statsData.wpm,
-        time: statsData.time,
-      };
+      const payload = { ...statsData, mode, difficulty };
 
-      return round;
+      if (isLoggedIn) {
+        return roundsApi.saveRound(payload);
+      }
+
+      return StatsService.saveRound(payload);
     },
-    [mode, category, difficulty]
+    [mode, category, difficulty, isLoggedIn]
   );
 
   const getHistory = useCallback(() => {
@@ -50,13 +46,11 @@ export const useRoundStats = () => {
   }, []);
 
   const getRecentRounds = useCallback((limit: number = 10) => {
-    const rounds = StatsService.getStoredRounds();
-    return rounds.slice(0, limit);
+    return StatsService.getStoredRounds().slice(0, limit);
   }, []);
 
   const getRoundsByMode = useCallback((targetMode: 'timed' | 'passage') => {
-    const rounds = StatsService.getStoredRounds();
-    return rounds.filter((r) => r.mode === targetMode);
+    return StatsService.getStoredRounds().filter((r) => r.mode === targetMode);
   }, []);
 
   const cleanupDuplicates = useCallback(() => {
@@ -73,7 +67,6 @@ export const useRoundStats = () => {
     });
 
     if (uniqueRounds.length !== rounds.length) {
-      console.log(`${rounds.length - uniqueRounds.length} duplicates removed`);
       localStorage.setItem('@typing-stats', JSON.stringify(uniqueRounds));
     }
 
@@ -85,6 +78,7 @@ export const useRoundStats = () => {
   }, []);
 
   return {
+    isLoggedIn,
     saveRound,
     getHistory,
     getRecentRounds,

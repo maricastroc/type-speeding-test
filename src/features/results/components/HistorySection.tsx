@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 import { usePersonalBest } from '@/features/typing/hooks/usePersonalBest';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCrown, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { roundsApi } from '@/services/roundsApi';
+import type { RoundStats } from '@/types/roundStats';
 
 type Props = {
   open: boolean;
@@ -14,32 +16,42 @@ type Props = {
 };
 
 export function HistorySection({ open, onOpenChange }: Props) {
-  const { getRecentRounds, deleteRound } = useRoundStats();
-
+  const { getRecentRounds, deleteRound, isLoggedIn } = useRoundStats();
   const personalBest = usePersonalBest();
 
   const [isOpen, setIsOpen] = useState(open);
   const [shouldRender, setShouldRender] = useState(open);
-  const [rounds, setRounds] = useState(() => getRecentRounds(5));
+  const [rounds, setRounds] = useState<RoundStats[]>([]);
+
+  const loadRounds = async () => {
+    if (isLoggedIn) {
+      try {
+        const data = await roundsApi.fetchRounds();
+        setRounds(data.slice(0, 5));
+      } catch {
+        setRounds([]);
+      }
+    } else {
+      setRounds(getRecentRounds(5));
+    }
+  };
 
   const handleDelete = (id: string) => {
     deleteRound(id);
-    setRounds(getRecentRounds(5));
+    setRounds((prev) => prev.filter((r) => r.id !== id));
   };
 
   useEffect(() => {
     if (open) {
       setIsOpen(true);
       setShouldRender(true);
+      loadRounds();
     } else {
       setIsOpen(false);
-      const timer = setTimeout(() => {
-        setShouldRender(false);
-      }, 250);
-
+      const timer = setTimeout(() => setShouldRender(false), 250);
       return () => clearTimeout(timer);
     }
-  }, [open]);
+  }, [open, isLoggedIn]);
 
   if (!shouldRender) return null;
 
@@ -67,11 +79,14 @@ export function HistorySection({ open, onOpenChange }: Props) {
         >
           <h1 className="text-preset-3-semibold text-center">History</h1>
           <p className="text-preset-4-regular text-neutral-400 mt-1 text-center">
-            Review your type history
+            {isLoggedIn ? 'Your saved rounds' : 'Review your type history'}
           </p>
 
           <div className="mt-8 flex flex-col flex-1">
             <div className="space-y-4 overflow-y-visible overflow-x-visible flex-1">
+              {rounds.length === 0 && (
+                <p className="text-neutral-500 text-center text-sm mt-8">No rounds yet.</p>
+              )}
               {rounds.map((round) => {
                 const isBest = round.wpm === personalBest;
 
@@ -79,38 +94,30 @@ export function HistorySection({ open, onOpenChange }: Props) {
                   <div
                     key={round.id}
                     className={`
-        group relative flex items-center justify-between p-4 rounded-xl
-        border transition-all duration-300
-        ${
-          isBest
-            ? 'border-yellow-500 shadow-[0_0_20px_rgba(250,204,21,0.35)]'
-            : 'border-neutral-500/40 hover:bg-neutral-800/30'
-        }
-      `}
+                      group relative flex items-center justify-between p-4 rounded-xl
+                      border transition-all duration-300
+                      ${
+                        isBest
+                          ? 'border-yellow-500 shadow-[0_0_20px_rgba(250,204,21,0.35)]'
+                          : 'border-neutral-500/40 hover:bg-neutral-800/30'
+                      }
+                    `}
                   >
                     {isBest && (
                       <div className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 rotate-12 pointer-events-none">
-                        <FontAwesomeIcon
-                          size="xl"
-                          icon={faCrown}
-                          className="text-yellow-500"
-                        />
+                        <FontAwesomeIcon size="xl" icon={faCrown} className="text-yellow-500" />
                       </div>
                     )}
 
                     <div>
                       <p className="text-neutral-0 text-preset-3-semibold">
                         {round.wpm}{' '}
-                        <span className="text-preset-7 text-neutral-400 font-mono">
-                          WPM
-                        </span>
+                        <span className="text-preset-7 text-neutral-400 font-mono">WPM</span>
                       </p>
-
                       <p className="text-preset-7 text-blue-400 font-mono">
                         {round.accuracy}% acc{' '}
-                        <span className="text-neutral-400">•</span> {round.time}
-                        s <span className="text-neutral-400">•</span>{' '}
-                        {round.mode}
+                        <span className="text-neutral-400">•</span> {round.time}s{' '}
+                        <span className="text-neutral-400">•</span> {round.mode}
                       </p>
                     </div>
 
@@ -118,13 +125,15 @@ export function HistorySection({ open, onOpenChange }: Props) {
                       <p className="text-sm text-neutral-500">
                         {formatDistanceToNow(round.timestamp, { addSuffix: true })}
                       </p>
-                      <button
-                        onClick={() => handleDelete(round.id)}
-                        className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 hover:text-red-500"
-                        title="Delete"
-                      >
-                        <FontAwesomeIcon icon={faTrash} size="sm" />
-                      </button>
+                      {!isLoggedIn && (
+                        <button
+                          onClick={() => handleDelete(round.id)}
+                          className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 hover:text-red-500"
+                          title="Delete"
+                        >
+                          <FontAwesomeIcon icon={faTrash} size="sm" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

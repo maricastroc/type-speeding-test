@@ -58,6 +58,8 @@ describe('engineReducer', () => {
       char: 'h',
       isCorrect: true,
       timestampMs: 1000,
+      charIndex: 0,
+      expectedChar: 'h',
     });
     const state = engineReducer(withChar, { type: 'BACKSPACE', wordIndex: 0 });
     expect(state.userInput[0]).toBe('');
