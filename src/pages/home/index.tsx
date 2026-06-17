@@ -35,12 +35,14 @@ export default function Home() {
   const [showHistorySection, setShowHistorySection] = useState(false);
 
   const [currentText, setCurrentText] = useState('');
+  const [currentTextId, setCurrentTextId] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const wordsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const isRandomizingRef = useRef(false);
+  const skipNextSWREffectRef = useRef(false);
 
   const requestConfig = useMemo(() => {
     if (isRandomizingRef.current) return null;
@@ -52,7 +54,7 @@ export default function Home() {
     };
   }, [category, difficulty]);
 
-  const { data, mutate, isValidating } = useRequest<TextResponse>(
+  const { data, isValidating } = useRequest<TextResponse>(
     requestConfig,
     {
       revalidateOnMount: true,
@@ -66,12 +68,14 @@ export default function Home() {
     isRandomizingRef.current = true;
 
     const response = await api.get<TextResponse>('/texts/random', {
-      params: { category: 'any', difficulty },
+      params: { category: 'any', difficulty, excludeId: currentTextId },
     });
 
     if (response.data) {
+      skipNextSWREffectRef.current = true;
       setCategory(response.data.category);
       setCurrentText(response.data.content);
+      setCurrentTextId(response.data.id);
       reset(response.data.content);
       prepare();
     }
@@ -80,13 +84,18 @@ export default function Home() {
   };
   const onNextText = async () => {
     setIsNextLoading(true);
-    const result = await mutate(undefined, { revalidate: true });
 
-    if (result?.data?.content) {
-      setCurrentText(result.data.content);
-      reset(result.data.content);
+    const response = await api.get<TextResponse>('/texts/random', {
+      params: { category, difficulty, excludeId: currentTextId },
+    });
+
+    if (response.data?.content) {
+      setCurrentText(response.data.content);
+      setCurrentTextId(response.data.id ?? null);
+      reset(response.data.content);
       prepare();
     }
+
     setIsNextLoading(false);
   };
 
@@ -141,7 +150,13 @@ export default function Home() {
   useEffect(() => {
     if (!data?.content) return;
 
+    if (skipNextSWREffectRef.current) {
+      skipNextSWREffectRef.current = false;
+      return;
+    }
+
     setCurrentText(data.content);
+    setCurrentTextId(data.id ?? null);
     reset(data.content);
   }, [data]);
 
@@ -211,8 +226,6 @@ export default function Home() {
     return () => clearTimeout(t);
   }, [isCompleted]);
 
-  const showCountdown =
-    mode === 'timed' && isStarted && !isCompleted && timeLeft <= 3 && timeLeft > 0;
 
   return (
     <div className="relative min-h-screen p-8 xl:px-28">
@@ -253,24 +266,24 @@ export default function Home() {
       )}
 
       <div className="mt-10 relative mx-auto text-left">
-        {!showResults && (
+        {!showResults && !currentText && (
+          <div className="flex flex-col gap-4 py-2">
+            {[85, 65, 75, 50, 70].map((w, i) => (
+              <div
+                key={i}
+                className="h-8 rounded-lg bg-neutral-800 animate-pulse"
+                style={{ width: `${w}%` }}
+              />
+            ))}
+          </div>
+        )}
+        {!showResults && currentText && (
           <div
             onClick={() => isReady && inputRef.current?.focus()}
             className={`max-h-42 overflow-y-auto scroll-smooth hide-scrollbar text-preset-1-regular leading-normal cursor-text transition-opacity duration-300 ${
               !isReady || isPaused || isLoading ? 'blur-xs opacity-70' : ''
             } ${textFading ? 'opacity-0' : ''}`}
           >
-            {words.length === 0 && (
-              <div className="flex flex-col gap-3 py-2">
-                {[80, 60, 72, 55, 68].map((w, i) => (
-                  <div
-                    key={i}
-                    className="h-6 rounded-md bg-neutral-700 animate-pulse"
-                    style={{ width: `${w}%` }}
-                  />
-                ))}
-              </div>
-            )}
             {words.map((word, wordIdx) => (
               <div
                 key={wordIdx}
@@ -305,17 +318,6 @@ export default function Home() {
               setTimeout(() => inputRef.current?.focus(), 10);
             }}
           />
-        )}
-
-        {showCountdown && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span
-              key={timeLeft}
-              className="animate-countdownPop text-[120px] font-bold leading-none text-blue-400 opacity-80"
-            >
-              {timeLeft}
-            </span>
-          </div>
         )}
 
         {!isReady && !isCompleted && !isPaused && (

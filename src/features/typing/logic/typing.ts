@@ -13,10 +13,10 @@ export function isLastWordComplete(
   words: string[],
   userInput: string[]
 ): boolean {
-  return (
-    activeWordIndex === words.length - 1 &&
-    userInput[activeWordIndex] === words[activeWordIndex]
-  );
+  if (activeWordIndex !== words.length - 1) return false;
+  const typed = userInput[activeWordIndex] ?? '';
+  const word = words[activeWordIndex];
+  return typed.length >= word.length;
 }
 
 export function canTypeMoreChars(typed: string, word: string): boolean {

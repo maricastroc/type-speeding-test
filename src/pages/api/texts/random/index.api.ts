@@ -6,6 +6,7 @@ import { z } from 'zod';
 const querySchema = z.object({
   category: z.enum(['general', 'lyrics', 'quotes', 'code', 'any']),
   difficulty: z.enum(['easy', 'medium', 'hard']),
+  excludeId: z.string().optional(),
 });
 
 export default async function handler(
@@ -17,14 +18,16 @@ export default async function handler(
   }
 
   try {
-    const { category, difficulty } = querySchema.parse(req.query);
+    const { category, difficulty, excludeId } = querySchema.parse(req.query);
 
-    const where: any = {
-      difficulty,
-    };
+    const where: any = { difficulty };
 
     if (category !== 'any') {
       where.category = category;
+    }
+
+    if (excludeId) {
+      where.id = { not: excludeId };
     }
 
     const count = await prisma.text.count({ where });
@@ -43,6 +46,7 @@ export default async function handler(
     });
 
     return res.status(200).json({
+      id: text?.id,
       content: text?.content,
       category: text?.category,
     });

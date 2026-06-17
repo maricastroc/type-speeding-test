@@ -8,7 +8,9 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     try {
       const item = localStorage.getItem(key);
       if (item) setStoredValue(JSON.parse(item) as T);
-    } catch {}
+    } catch { /* ignore */
+      // ignore parse errors
+    }
     setMounted(true);
   }, [key]);
 
@@ -16,7 +18,9 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     setStoredValue(value);
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch {}
+    } catch { /* ignore */
+      // ignore storage errors
+    }
   };
 
   return [mounted ? storedValue : initialValue, setValue] as const;
